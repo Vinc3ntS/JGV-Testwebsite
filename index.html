@@ -34,8 +34,8 @@
         .timeline-container.right::after { left: -13px; }
         .timeline-content { padding: 20px 30px; position: relative; border-radius: 6px; }
         .details-content { max-height: 0; overflow: hidden; transition: max-height 0.5s ease-in-out; }
-        .gallery-item { position: relative; }
-        .edit-gallery-btn {
+        .gallery-item, .calendar-container { position: relative; }
+        .edit-overlay-btn {
             position: absolute;
             top: 0.5rem;
             right: 0.5rem;
@@ -49,9 +49,10 @@
             justify-content: center;
             cursor: pointer;
             transition: background-color 0.2s;
+            z-index: 10;
         }
-        .edit-gallery-btn:hover { background-color: rgba(0,0,0,0.9); }
-        .jgv-editing .edit-gallery-btn { display: flex; }
+        .edit-overlay-btn:hover { background-color: rgba(0,0,0,0.9); }
+        .jgv-editing .edit-overlay-btn { display: flex; }
 
         @media screen and (max-width: 768px) {
             .timeline::after { left: 31px; }
@@ -264,19 +265,19 @@
         
         // --- RENDER FUNCTIONS ---
         
-        function renderContent() { renderEditableContent(); renderCurrentTabs(); renderDynamicStyles(); }
+        function renderContent() { renderEditableContent(); renderCurrentTabs(); renderDynamicStyles(); renderGallery(); }
         function renderDynamicContent() { renderTimeline(); renderNextEventHome(); }
         
         function renderMainContent() {
             if (document.getElementById('home')) return;
             document.getElementById('main-content').innerHTML = `
-                <section id="home" class="page-section min-h-screen flex items-center justify-center text-center bg-cover bg-center bg-fixed"><div class="absolute top-0 right-0 p-2 jgv-editing-only"><button onclick="handleBgEdit()" class="bg-black/50 hover:bg-black/70 text-white text-xs py-1 px-2 rounded-full"><i class="fas fa-image mr-1"></i>Hintergrund</button></div><div class="container mx-auto px-6 text-white"><h1 id="home-title" class="jgv-editable text-5xl md:text-7xl font-black mb-4"></h1><p id="home-subtitle" class="jgv-editable text-xl md:text-2xl mb-8"></p><div class="bg-black/30 backdrop-blur-md p-6 rounded-lg max-w-4xl mx-auto"><h2 class="text-2xl font-bold mb-3">Das nächste Highlight</h2><div id="next-event-container-home" class="text-lg"></div></div></div></section>
+                <section id="home" class="page-section min-h-screen flex items-center justify-center text-center bg-cover bg-center bg-fixed relative"><div class="absolute top-0 right-0 p-2 jgv-editing-only"><button onclick="handleBgEdit()" class="bg-black/50 hover:bg-black/70 text-white text-xs py-1 px-2 rounded-full"><i class="fas fa-image mr-1"></i>Hintergrund</button></div><div class="container mx-auto px-6 text-white"><h1 id="home-title" class="jgv-editable text-5xl md:text-7xl font-black mb-4"></h1><p id="home-subtitle" class="jgv-editable text-xl md:text-2xl mb-8"></p><div class="bg-black/30 backdrop-blur-md p-6 rounded-lg max-w-4xl mx-auto"><h2 class="text-2xl font-bold mb-3">Das nächste Highlight</h2><div id="next-event-container-home" class="text-lg"></div></div></div></section>
                 <section id="home-intro" class="page-section py-20 bg-gray-900"><div class="container mx-auto px-6"><div class="text-center mb-12"><h2 class="text-4xl font-bold mb-4">Willkommen beim JGV Kripp</h2><p id="verein-intro-text" class="jgv-editable max-w-3xl mx-auto text-lg text-gray-400"></p></div><div class="mt-12"><div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center"><div><i class="fas fa-calendar-alt text-4xl text-blue-400 mb-4"></i><h3 id="stat-year" class="jgv-editable text-5xl font-bold"></h3><p class="text-gray-400 mt-2">Gründungsjahr</p></div><div><i class="fas fa-users text-4xl text-blue-400 mb-4"></i><h3 id="stat-members" class="jgv-editable text-5xl font-bold"></h3><p class="text-gray-400 mt-2">Mitglieder</p></div><div><i class="fas fa-glass-cheers text-4xl text-blue-400 mb-4"></i><h3 id="stat-feste" class="jgv-editable text-5xl font-bold"></h3><p class="text-gray-400 mt-2">Jährliche Feste</p></div></div></div></div></section>
-                <section id="termine" class="page-section hidden py-20"><div class="container mx-auto px-6"><div class="text-center mb-12"><h2 class="text-4xl font-bold mb-4">Unsere Termine</h2><p class="max-w-3xl mx-auto text-lg text-gray-400">Hier finden Sie eine Übersicht über alle kommenden und vergangenen Veranstaltungen.</p></div><div class="mb-12 bg-gray-800 p-2 sm:p-3 rounded-lg shadow-lg overflow-hidden max-w-4xl mx-auto"><div id="google-calendar-termine-embed" class="jgv-editable aspect-w-16 aspect-h-9"></div></div><div id="admin-event-form-container"></div><div id="timeline-container" class="timeline"></div></div></section>
+                <section id="termine" class="page-section hidden py-20"><div class="container mx-auto px-6"><div class="text-center mb-12"><h2 class="text-4xl font-bold mb-4">Unsere Termine</h2><p class="max-w-3xl mx-auto text-lg text-gray-400">Hier finden Sie eine Übersicht über alle kommenden und vergangenen Veranstaltungen.</p></div><div class="mb-12 bg-gray-800 p-2 sm:p-3 rounded-lg shadow-lg overflow-hidden max-w-4xl mx-auto relative calendar-container"><button onclick="handleCalendarEdit('google-calendar-termine-embed')" class="edit-overlay-btn" title="Kalender bearbeiten"><i class="fas fa-pencil-alt text-xs"></i></button><div id="google-calendar-termine-embed" class="aspect-w-16 aspect-h-9"></div></div><div id="admin-event-form-container"></div><div id="timeline-container" class="timeline"></div></div></section>
                 <section id="galerie" class="page-section hidden py-20 bg-gray-900"><div class="container mx-auto px-6"><div class="text-center mb-12"><h2 class="text-4xl font-bold mb-4">Fotogalerie</h2><p id="gallery-intro-text" class="jgv-editable max-w-3xl mx-auto text-lg text-gray-400"></p></div><div id="gallery-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"></div></div></section>
                 <section id="verein" class="page-section hidden py-20"><div class="container mx-auto px-6"><div class="text-center mb-12"><h2 class="text-4xl font-bold mb-4">Unser Verein</h2><p class="max-w-3xl mx-auto text-lg text-gray-400">Lernen Sie die Menschen kennen, die den Verein gestalten und führen.</p><div class="flex flex-wrap justify-center gap-2 mt-6"><button data-verein-tab="vorstand" class="verein-tab-btn bg-blue-500 text-white py-2 px-4 rounded-full">Vorstand</button><button data-verein-tab="amtstraeger" class="verein-tab-btn bg-gray-700 py-2 px-4 rounded-full">Amtsträger</button><button data-verein-tab="festausschuss" class="verein-tab-btn bg-gray-700 py-2 px-4 rounded-full">Festausschuss</button><button data-verein-tab="martinsausschuss" class="verein-tab-btn bg-gray-700 py-2 px-4 rounded-full">Martinsausschuss</button></div></div><div id="verein-content" class="mt-8"></div></div></section>
                 <section id="brauchtum" class="page-section hidden py-20 bg-gray-900"><div class="container mx-auto px-6"><div class="text-center mb-12"><h2 class="text-4xl font-bold mb-4">Brauchtum & Tradition</h2><p class="max-w-3xl mx-auto text-lg text-gray-400">Entdecken Sie die reiche Geschichte und die gelebten Traditionen unseres Vereins.</p><div class="flex flex-wrap justify-center gap-2 mt-6"><button data-brauchtum-tab="geschichte" class="brauchtum-tab-btn bg-blue-500 text-white py-2 px-4 rounded-full">Geschichte</button><button data-brauchtum-tab="chronik" class="brauchtum-tab-btn bg-gray-700 py-2 px-4 rounded-full">Chronik der Könige</button><button data-brauchtum-tab="kirmes" class="brauchtum-tab-btn bg-gray-700 py-2 px-4 rounded-full">Kirmes</button><button data-brauchtum-tab="maiabend" class="brauchtum-tab-btn bg-gray-700 py-2 px-4 rounded-full">Maiabend</button><button data-brauchtum-tab="strohbaertreiben" class="brauchtum-tab-btn bg-gray-700 py-2 px-4 rounded-full">Strohbärtreiben</button><button data-brauchtum-tab="martinstag" class="brauchtum-tab-btn bg-gray-700 py-2 px-4 rounded-full">Martinstag</button><button data-brauchtum-tab="faehndelschwenken" class="brauchtum-tab-btn bg-gray-700 py-2 px-4 rounded-full">Fähndelschwenken</button></div></div><div id="brauchtum-content" class="mt-8"></div></div></section>
-                <section id="vermietung" class="page-section hidden py-20"><div class="container mx-auto px-6"><div class="text-center mb-12"><h2 class="text-4xl font-bold mb-4">Vermietung Vereinsheim</h2><p id="vermietung-intro-text" class="jgv-editable max-w-3xl mx-auto text-lg text-gray-400"></p></div><div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center"><div><h3 class="text-2xl font-bold mb-4">Informationen</h3><p id="vermietung-details-text" class="jgv-editable text-gray-300 mb-4"></p><ul class="space-y-2"><li class="jgv-editable" data-id="vermietung-li-1"></li><li class="jgv-editable" data-id="vermietung-li-2"></li><li class="jgv-editable" data-id="vermietung-li-3"></li><li class="jgv-editable" data-id="vermietung-li-4"></li></ul></div><div class="bg-gray-800 p-2 sm:p-3 rounded-lg shadow-lg overflow-hidden"><div id="google-calendar-embed" class="jgv-editable aspect-w-4 aspect-h-3"></div></div></div></div></section>
+                <section id="vermietung" class="page-section hidden py-20"><div class="container mx-auto px-6"><div class="text-center mb-12"><h2 class="text-4xl font-bold mb-4">Vermietung Vereinsheim</h2><p id="vermietung-intro-text" class="jgv-editable max-w-3xl mx-auto text-lg text-gray-400"></p></div><div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center"><div><h3 class="text-2xl font-bold mb-4">Informationen</h3><p id="vermietung-details-text" class="jgv-editable text-gray-300 mb-4"></p><ul class="space-y-2"><li class="jgv-editable" data-id="vermietung-li-1"></li><li class="jgv-editable" data-id="vermietung-li-2"></li><li class="jgv-editable" data-id="vermietung-li-3"></li><li class="jgv-editable" data-id="vermietung-li-4"></li></ul></div><div class="bg-gray-800 p-2 sm:p-3 rounded-lg shadow-lg overflow-hidden calendar-container"><button onclick="handleCalendarEdit('google-calendar-embed')" class="edit-overlay-btn" title="Kalender bearbeiten"><i class="fas fa-pencil-alt text-xs"></i></button><div id="google-calendar-embed" class="aspect-w-4 aspect-h-3"></div></div></div></div></section>
                 <section id="kontakt" class="page-section hidden py-20 bg-gray-900"><div class="container mx-auto px-6"><div class="text-center mb-12"><h2 class="text-4xl font-bold mb-4">Kontakt</h2></div><div class="max-w-xl mx-auto bg-gray-800 p-8 rounded-lg shadow-lg text-center"><p id="kontakt-text" class="jgv-editable text-lg"></p></div></div></section>
                 <section id="impressum" class="page-section hidden py-20"><div class="container mx-auto px-6"><div class="text-center mb-12"><h2 class="text-4xl font-bold mb-4">Impressum</h2></div><div class="max-w-2xl mx-auto bg-gray-800 p-8 rounded-lg shadow-lg"><div id="impressum-text" class="jgv-editable prose-invert max-w-none"></div></div></div></section>
                 <section id="datenschutz" class="page-section hidden py-20 bg-gray-900"><div class="container mx-auto px-6"><div class="text-center mb-12"><h2 class="text-4xl font-bold mb-4">Datenschutzerklärung</h2></div><div class="max-w-2xl mx-auto bg-gray-800 p-8 rounded-lg shadow-lg"><div id="datenschutz-text" class="jgv-editable prose-invert max-w-none"></div></div></div></section>
@@ -378,7 +379,7 @@
             grid.innerHTML = state.gallery.map((img, index) => `
                 <div class="aspect-w-4 aspect-h-3 gallery-item" data-index="${index}">
                     <img src="${img.thumb}" data-full="${img.full}" alt="Galeriebild ${index + 1}" class="w-full h-full object-cover rounded-lg shadow-md cursor-pointer hover:scale-105 transition-transform">
-                    <button class="edit-gallery-btn" title="Bild ändern"><i class="fas fa-pencil-alt text-xs"></i></button>
+                    <button class="edit-overlay-btn" title="Bild ändern"><i class="fas fa-pencil-alt text-xs"></i></button>
                 </div>`).join('');
         }
         function renderCurrentTabs() {
@@ -492,25 +493,35 @@
             if (e.target.id === 'toggle-tipp-lock') { await updateDoc(dataDocRef, { 'memberData.koenigstipp.locked': !state.memberData.koenigstipp.locked }); }
             if (e.target.id === 'declare-winner-btn') { const winner = prompt('Wer ist der Gewinner?'); if (winner) await updateDoc(dataDocRef, { 'memberData.koenigstipp.winner': winner, 'memberData.koenigstipp.locked': true }); }
         }
-        async function handleBgEdit() {
+        window.handleBgEdit = async function() {
             const newUrl = prompt('Bitte geben Sie die neue URL für das Hintergrundbild ein:', state.content.home_background_url);
             if(newUrl) {
                 await updateDoc(doc(db, "jgv-website-data", appId), { 'content.home_background_url': newUrl });
                 showToast('Hintergrundbild aktualisiert!');
             }
         }
-        async function handleGalleryImageEdit(index) {
+        window.handleGalleryImageEdit = async function(index) {
             const oldThumb = state.gallery[index].thumb;
             const oldFull = state.gallery[index].full;
             const newThumb = prompt('URL für das kleine Vorschaubild:', oldThumb);
             if (newThumb === null) return;
-            const newFull = prompt('URL für das große Bild (Lightbox):', oldFull);
+            const newFull = prompt('URL für das große Bild (Lightbox):', newFull);
             if (newFull === null) return;
 
             const newGallery = [...state.gallery];
             newGallery[index] = { thumb: newThumb, full: newFull };
             await updateDoc(doc(db, "jgv-website-data", appId), { gallery: newGallery });
             showToast('Galeriebild aktualisiert!');
+        }
+        window.handleCalendarEdit = async function(elementId) {
+            const oldIframe = state.content[elementId];
+            const newIframe = prompt('Bitte fügen Sie hier den neuen Google Kalender Einbettungscode (<iframe>) ein:', oldIframe);
+             if (newIframe && newIframe.startsWith('<iframe')) {
+                await updateDoc(doc(db, "jgv-website-data", appId), { [`content.${elementId}`]: newIframe });
+                showToast('Kalender aktualisiert!');
+            } else if (newIframe !== null) {
+                alert("Fehler: Der eingefügte Text scheint kein gültiger <iframe> Code zu sein.");
+            }
         }
         function showToast(message, type = 'success') {
             const toast = document.getElementById('toast-notification'); toast.textContent = message;
