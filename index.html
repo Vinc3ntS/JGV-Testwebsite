@@ -13,9 +13,7 @@
     <style>
         :root {
             --primary-color: #3b82f6; /* blue-500 */
-            --background-light: #f9fafb; /* gray-50 */
             --background-dark: #111827; /* gray-900 */
-            --text-light: #1f2937;
             --text-dark: #f3f4f6;
         }
         body {
@@ -36,6 +34,25 @@
         .timeline-container.right::after { left: -13px; }
         .timeline-content { padding: 20px 30px; position: relative; border-radius: 6px; }
         .details-content { max-height: 0; overflow: hidden; transition: max-height 0.5s ease-in-out; }
+        .gallery-item { position: relative; }
+        .edit-gallery-btn {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background-color: rgba(0,0,0,0.7);
+            color: white;
+            border-radius: 9999px;
+            width: 2rem;
+            height: 2rem;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .edit-gallery-btn:hover { background-color: rgba(0,0,0,0.9); }
+        .jgv-editing .edit-gallery-btn { display: flex; }
+
         @media screen and (max-width: 768px) {
             .timeline::after { left: 31px; }
             .timeline-container { width: 100%; padding-left: 70px; padding-right: 25px; }
@@ -112,6 +129,7 @@
         const initialData = {
             content: {
                 'home-title': 'JGV "Einigkeit" Kripp', 'home-subtitle': 'Tradition, Gemeinschaft und Zukunft seit 1888.',
+                'home_background_url': 'https://placehold.co/1920x1080/3b82f6/ffffff?text=Vereinsleben',
                 'verein-intro-text': 'Der Junggesellenverein "Einigkeit" Kripp ist mehr als nur ein Verein – wir sind eine Gemeinschaft, die Traditionen pflegt, Feste feiert und das Dorfleben aktiv mitgestaltet. Erfahren Sie mehr über uns und werden Sie Teil unserer Geschichte.',
                 'gallery-intro-text': 'Einblicke in unser Vereinsleben. Hier teilen wir die schönsten Momente unserer Feste und Aktivitäten.',
                 'vermietung-intro-text': 'Unser Vereinsheim kann für private Feiern gemietet werden. Hier finden Sie alle Informationen und den Belegungskalender.',
@@ -134,6 +152,7 @@
                 'martinstag-text': 'Am Martinstag begleiten wir den Martinszug durch das Dorf und helfen bei der Organisation des großen Martinsfeuers. Im Anschluss erhalten die Kinder traditionell ihre Weckmänner.',
                 'faehndelschwenken-text': 'Das Fähndelschwenken ist eine hohe Kunst und fester Bestandteil unserer Festzüge. Unsere Fähnriche repräsentieren den Verein mit Stolz und Eleganz. Das Schwenken der großen Vereinsfahne erfordert Kraft, Geschick und viel Übung.'
             },
+            gallery: Array.from({ length: 12 }, (_, i) => ({ id: i + 1, thumb: `https://placehold.co/400x300/60a5fa/ffffff?text=Foto+${i+1}`, full: `https://placehold.co/1200x900/60a5fa/ffffff?text=Foto+${i+1}` })),
             events: [
                 { id: 'evt1', date: '2025-11-11', title: 'St. Martin', description: 'Begleitung des St. Martinszugs durch das Dorf mit anschließendem Martinsfeuer.', type: 'public', details: 'Wir treffen uns um 17:30 Uhr an der Grundschule, um den Zug mit Fackeln zu begleiten. Im Anschluss gibt es am Martinsfeuer Glühwein und Kinderpunsch für alle Helfer.' },
                 { id: 'evt2', date: '2026-05-28', title: 'Kirmes-Wochenende', description: 'Das Highlight des Jahres! Kirmes in Kripp mit Live-Musik und Königsball.', type: 'public', details: 'Freitag: 90er Party mit DJ. Samstag: Kölsche Nacht. Sonntag: Bürgerfrühstück und Familiennachmittag. Montag: Traditioneller Königsball.' },
@@ -142,13 +161,12 @@
                 { id: 'evt5', date: '2025-09-10', title: 'Vergangenes Event', description: 'Dies ist ein Test für ein vergangenes Event.', type: 'public', details: 'Hier standen die Details des vergangenen Events.' }
             ],
             koenigsarchiv: [ { year: 2025, name: 'Christian Laux' }, { year: 2024, name: 'Tim Weber' }, { year: 2023, name: 'Martin Doll' }, { year: 2022, name: 'Lukas Boes' }, { year: 2020, name: 'COVID-19 Pause' }, { year: 2019, name: 'Niklas Reich' } ],
-            gallery: Array.from({ length: 12 }, (_, i) => ({ id: i + 1, thumb: `https://placehold.co/400x300/60a5fa/ffffff?text=Foto+${i+1}`, full: `https://placehold.co/1200x900/60a5fa/ffffff?text=Foto+${i+1}` })),
             memberData: { koenigstipp: { locked: false, winner: null, tips: [{ user: 'Max M.', tip: 'Peter Schmidt' }] }, dienstplan: { 'freitag-theke-1': null, 'freitag-theke-2': 'Klaus B.' } }
         };
 
         let db, auth, appId;
         let detachListeners = () => {};
-        const state = { authLevel: 'public', content: {}, events: [], memberData: { koenigstipp: { tips: [] }, dienstplan: {} }, koenigsarchiv: [], gallery: initialData.gallery };
+        const state = { authLevel: 'public', content: {}, events: [], memberData: { koenigstipp: { tips: [] }, dienstplan: {} }, koenigsarchiv: [], gallery: [] };
         
         // --- CORE INITIALIZATION ---
         
@@ -201,6 +219,7 @@
                 console.log("Seeding database...");
                 const initialDbData = {
                     content: initialData.content,
+                    gallery: initialData.gallery,
                     memberData: initialData.memberData,
                     koenigsarchiv: initialData.koenigsarchiv
                 };
@@ -222,6 +241,7 @@
             const unsub1 = onSnapshot(dataDocRef, d => {
                 const data = d.data() || {};
                 state.content = data.content || {};
+                state.gallery = data.gallery || [];
                 state.memberData = data.memberData || { koenigstipp: { tips: [] }, dienstplan: {} };
                 state.koenigsarchiv = data.koenigsarchiv || [];
                 renderContent();
@@ -244,13 +264,13 @@
         
         // --- RENDER FUNCTIONS ---
         
-        function renderContent() { renderEditableContent(); renderCurrentTabs(); }
+        function renderContent() { renderEditableContent(); renderCurrentTabs(); renderDynamicStyles(); }
         function renderDynamicContent() { renderTimeline(); renderNextEventHome(); }
         
         function renderMainContent() {
             if (document.getElementById('home')) return;
             document.getElementById('main-content').innerHTML = `
-                <section id="home" class="page-section min-h-screen flex items-center justify-center text-center bg-cover bg-center" style="background-image: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('https://placehold.co/1920x1080/3b82f6/ffffff?text=Vereinsleben');"><div class="container mx-auto px-6 text-white"><h1 id="home-title" class="jgv-editable text-5xl md:text-7xl font-black mb-4"></h1><p id="home-subtitle" class="jgv-editable text-xl md:text-2xl mb-8"></p><div class="bg-black/30 backdrop-blur-md p-6 rounded-lg max-w-4xl mx-auto"><h2 class="text-2xl font-bold mb-3">Das nächste Highlight</h2><div id="next-event-container-home" class="text-lg"></div></div></div></section>
+                <section id="home" class="page-section min-h-screen flex items-center justify-center text-center bg-cover bg-center bg-fixed"><div class="absolute top-0 right-0 p-2 jgv-editing-only"><button onclick="handleBgEdit()" class="bg-black/50 hover:bg-black/70 text-white text-xs py-1 px-2 rounded-full"><i class="fas fa-image mr-1"></i>Hintergrund</button></div><div class="container mx-auto px-6 text-white"><h1 id="home-title" class="jgv-editable text-5xl md:text-7xl font-black mb-4"></h1><p id="home-subtitle" class="jgv-editable text-xl md:text-2xl mb-8"></p><div class="bg-black/30 backdrop-blur-md p-6 rounded-lg max-w-4xl mx-auto"><h2 class="text-2xl font-bold mb-3">Das nächste Highlight</h2><div id="next-event-container-home" class="text-lg"></div></div></div></section>
                 <section id="home-intro" class="page-section py-20 bg-gray-900"><div class="container mx-auto px-6"><div class="text-center mb-12"><h2 class="text-4xl font-bold mb-4">Willkommen beim JGV Kripp</h2><p id="verein-intro-text" class="jgv-editable max-w-3xl mx-auto text-lg text-gray-400"></p></div><div class="mt-12"><div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center"><div><i class="fas fa-calendar-alt text-4xl text-blue-400 mb-4"></i><h3 id="stat-year" class="jgv-editable text-5xl font-bold"></h3><p class="text-gray-400 mt-2">Gründungsjahr</p></div><div><i class="fas fa-users text-4xl text-blue-400 mb-4"></i><h3 id="stat-members" class="jgv-editable text-5xl font-bold"></h3><p class="text-gray-400 mt-2">Mitglieder</p></div><div><i class="fas fa-glass-cheers text-4xl text-blue-400 mb-4"></i><h3 id="stat-feste" class="jgv-editable text-5xl font-bold"></h3><p class="text-gray-400 mt-2">Jährliche Feste</p></div></div></div></div></section>
                 <section id="termine" class="page-section hidden py-20"><div class="container mx-auto px-6"><div class="text-center mb-12"><h2 class="text-4xl font-bold mb-4">Unsere Termine</h2><p class="max-w-3xl mx-auto text-lg text-gray-400">Hier finden Sie eine Übersicht über alle kommenden und vergangenen Veranstaltungen.</p></div><div class="mb-12 bg-gray-800 p-2 sm:p-3 rounded-lg shadow-lg overflow-hidden max-w-4xl mx-auto"><div id="google-calendar-termine-embed" class="jgv-editable aspect-w-16 aspect-h-9"></div></div><div id="admin-event-form-container"></div><div id="timeline-container" class="timeline"></div></div></section>
                 <section id="galerie" class="page-section hidden py-20 bg-gray-900"><div class="container mx-auto px-6"><div class="text-center mb-12"><h2 class="text-4xl font-bold mb-4">Fotogalerie</h2><p id="gallery-intro-text" class="jgv-editable max-w-3xl mx-auto text-lg text-gray-400"></p></div><div id="gallery-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"></div></div></section>
@@ -298,6 +318,10 @@
                     btn.classList.add('bg-blue-500', 'text-white'); btn.classList.remove('bg-gray-700');
                     renderBrauchtumContent(btn.dataset.brauchtumTab);
                 }
+                if (e.target.closest('.edit-gallery-btn')) {
+                    const index = e.target.closest('.gallery-item').dataset.index;
+                    handleGalleryImageEdit(index);
+                }
             });
              document.querySelector('#member-area').addEventListener('click', (e) => {
                 if (e.target.closest('.member-tab-btn')) {
@@ -317,6 +341,12 @@
                 const id = el.id || el.dataset.id;
                 if (id && state.content[id]) el.innerHTML = state.content[id];
             });
+        }
+        function renderDynamicStyles() {
+            const homeSection = document.getElementById('home');
+            if(homeSection && state.content.home_background_url) {
+                homeSection.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('${state.content.home_background_url}')`;
+            }
         }
         function renderTimeline() {
             const container = document.getElementById('timeline-container');
@@ -344,7 +374,12 @@
         }
         function renderGallery() {
             const grid = document.getElementById('gallery-grid');
-            if(!grid) return; grid.innerHTML = state.gallery.map(img => `<div class="aspect-w-4 aspect-h-3"><img src="${img.thumb}" data-full="${img.full}" alt="Galeriebild ${img.id}" class="w-full h-full object-cover rounded-lg shadow-md cursor-pointer hover:scale-105 transition-transform"></div>`).join('');
+            if(!grid) return; 
+            grid.innerHTML = state.gallery.map((img, index) => `
+                <div class="aspect-w-4 aspect-h-3 gallery-item" data-index="${index}">
+                    <img src="${img.thumb}" data-full="${img.full}" alt="Galeriebild ${index + 1}" class="w-full h-full object-cover rounded-lg shadow-md cursor-pointer hover:scale-105 transition-transform">
+                    <button class="edit-gallery-btn" title="Bild ändern"><i class="fas fa-pencil-alt text-xs"></i></button>
+                </div>`).join('');
         }
         function renderCurrentTabs() {
             const vereinTab = document.querySelector('#verein .verein-tab-btn.bg-blue-500')?.dataset.vereinTab; if(vereinTab) renderVereinContent(vereinTab);
@@ -358,7 +393,7 @@
         }
         function renderBrauchtumContent(tab) {
             const container = document.getElementById('brauchtum-content'); if (!container) return; let content = '';
-            const baseLayout = (textId) => `<div class="bg-gray-800 p-8 rounded-lg shadow-lg max-w-4xl mx-auto"><h3 class="text-3xl font-bold mb-4 text-center">${document.querySelector(`[data-brauchtum-tab="${tab}"]`).textContent}</h3><p class="jgv-editable text-lg text-gray-400" data-id="${textId}"></p></div>`;
+            const baseLayout = (textId) => `<div class="bg-gray-800 p-8 rounded-lg shadow-lg max-w-4xl mx-auto"><h3 class="text-3xl font-bold mb-4 text-center">${document.querySelector(`[data-brauchtum-tab="${tab}"]`).textContent}</h3><div class="jgv-editable text-lg text-gray-400" data-id="${textId}"></div></div>`;
             switch (tab) { case 'geschichte': content = baseLayout('geschichte-text'); break; case 'chronik': content = `<div class="bg-gray-800 p-8 rounded-lg shadow-lg max-w-4xl mx-auto"><h3 class="text-3xl font-bold mb-6 text-center">Chronik der Könige</h3><div id="koenigsarchiv-container" class="overflow-x-auto"></div></div>`; break; default: content = baseLayout(`${tab}-text`); break; }
             container.innerHTML = content; if (tab === 'chronik') renderKoenigsarchiv(); renderEditableContent();
         }
@@ -456,6 +491,26 @@
             }
             if (e.target.id === 'toggle-tipp-lock') { await updateDoc(dataDocRef, { 'memberData.koenigstipp.locked': !state.memberData.koenigstipp.locked }); }
             if (e.target.id === 'declare-winner-btn') { const winner = prompt('Wer ist der Gewinner?'); if (winner) await updateDoc(dataDocRef, { 'memberData.koenigstipp.winner': winner, 'memberData.koenigstipp.locked': true }); }
+        }
+        async function handleBgEdit() {
+            const newUrl = prompt('Bitte geben Sie die neue URL für das Hintergrundbild ein:', state.content.home_background_url);
+            if(newUrl) {
+                await updateDoc(doc(db, "jgv-website-data", appId), { 'content.home_background_url': newUrl });
+                showToast('Hintergrundbild aktualisiert!');
+            }
+        }
+        async function handleGalleryImageEdit(index) {
+            const oldThumb = state.gallery[index].thumb;
+            const oldFull = state.gallery[index].full;
+            const newThumb = prompt('URL für das kleine Vorschaubild:', oldThumb);
+            if (newThumb === null) return;
+            const newFull = prompt('URL für das große Bild (Lightbox):', oldFull);
+            if (newFull === null) return;
+
+            const newGallery = [...state.gallery];
+            newGallery[index] = { thumb: newThumb, full: newFull };
+            await updateDoc(doc(db, "jgv-website-data", appId), { gallery: newGallery });
+            showToast('Galeriebild aktualisiert!');
         }
         function showToast(message, type = 'success') {
             const toast = document.getElementById('toast-notification'); toast.textContent = message;
