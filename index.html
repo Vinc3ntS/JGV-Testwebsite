@@ -1,0 +1,1058 @@
+<!DOCTYPE html>
+<html lang="de" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JGV Kripp - Junggesellenverein "Einigkeit"</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #3b82f6; /* blue-500 */
+            --secondary-color: #10b981; /* emerald-500 */
+            --background-light: #f9fafb; /* gray-50 */
+            --background-dark: #111827; /* gray-900 */
+            --text-light: #1f2937; /* gray-800 */
+            --text-dark: #f3f4f6; /* gray-200 */
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--background-light);
+            color: var(--text-light);
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .dark body {
+            background-color: var(--background-dark);
+            color: var(--text-dark);
+        }
+        .jgv-editable {
+            transition: outline 0.2s ease-in-out;
+            outline: 2px dashed transparent;
+        }
+        .jgv-editing .jgv-editable {
+            outline-color: var(--primary-color);
+            cursor: text;
+        }
+        .jgv-editing .jgv-editable:hover {
+            outline-style: solid;
+        }
+        /* Timeline styles */
+        .timeline { position: relative; max-width: 1200px; margin: 0 auto; }
+        .timeline::after { content: ''; position: absolute; width: 6px; background-color: var(--primary-color); top: 0; bottom: 0; left: 50%; margin-left: -3px; }
+        .timeline-container { padding: 10px 40px; position: relative; background-color: inherit; width: 50%; }
+        .timeline-container.left { left: 0; }
+        .timeline-container.right { left: 50%; }
+        .timeline-container::after { content: ''; position: absolute; width: 25px; height: 25px; right: -12px; background-color: var(--background-light); border: 4px solid var(--primary-color); top: 15px; border-radius: 50%; z-index: 1; }
+        .dark .timeline-container::after { background-color: var(--background-dark); }
+        .timeline-container.right::after { left: -13px; }
+        .timeline-content { padding: 20px 30px; position: relative; border-radius: 6px; }
+        
+        /* Timeline Animation */
+        .timeline-container {
+            opacity: 0;
+            transform: translateY(50px);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+        }
+        .timeline-container.is-visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        /* Collapsible details transition */
+        .details-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-in-out;
+        }
+
+        @media screen and (max-width: 768px) {
+            .timeline::after { left: 31px; }
+            .timeline-container { width: 100%; padding-left: 70px; padding-right: 25px; }
+            .timeline-container.right { left: 0%; }
+            .timeline-container.left::after, .timeline-container.right::after { left: 18px; }
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        .dark ::webkit-scrollbar-track { background: #2d3748; }
+        ::-webkit-scrollbar-thumb { background: #888; border-radius: 4px; }
+        .dark ::webkit-scrollbar-thumb { background: #555; }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
+        .dark ::webkit-scrollbar-thumb:hover { background: #777; }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Admin Bar -->
+    <div id="admin-bar" class="hidden fixed top-0 left-0 right-0 bg-yellow-400 text-yellow-900 px-4 py-2 flex justify-between items-center shadow-lg z-50">
+        <div>
+            <i class="fas fa-exclamation-triangle mr-2"></i>
+            <span class="font-bold">Admin-Modus Aktiv</span>
+        </div>
+        <div>
+            <button id="save-changes-btn" class="bg-green-500 hover:bg-green-600 text-white font-bold py-1 px-3 rounded text-sm mr-2">
+                <i class="fas fa-save mr-1"></i> Speichern
+            </button>
+            <button id="exit-admin-btn" class="bg-red-500 hover:bg-red-600 text-white font-bold py-1 px-3 rounded text-sm">
+                <i class="fas fa-sign-out-alt mr-1"></i> Beenden
+            </button>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm sticky top-0 z-40 shadow-md">
+        <nav class="container mx-auto px-6 py-3 flex justify-between items-center">
+            <a href="#home" class="text-2xl font-bold text-blue-500 dark:text-blue-400">JGV Kripp</a>
+            <div class="hidden md:flex space-x-6 items-center">
+                <a href="#home" class="nav-link hover:text-blue-500">Start</a>
+                <a href="#termine" class="nav-link hover:text-blue-500">Termine</a>
+                <a href="#galerie" class="nav-link hover:text-blue-500">Galerie</a>
+                <a href="#verein" class="nav-link hover:text-blue-500">Der Verein</a>
+                <a href="#brauchtum" class="nav-link hover:text-blue-500">Brauchtum</a>
+                <a href="#vermietung" class="nav-link hover:text-blue-500">Vermietung</a>
+                <a href="#kontakt" class="nav-link hover:text-blue-500">Kontakt</a>
+            </div>
+            <div class="flex items-center space-x-4">
+                <button id="theme-toggle" class="text-gray-600 dark:text-gray-300 hover:text-blue-500 dark:hover:text-blue-400">
+                    <i class="fas fa-sun text-xl"></i>
+                    <i class="fas fa-moon text-xl hidden"></i>
+                </button>
+                <button id="login-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-full transition duration-300">
+                    <i class="fas fa-user mr-2"></i>Login
+                </button>
+                 <button id="logout-btn" class="hidden bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-full transition duration-300">
+                    <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                </button>
+                <button id="mobile-menu-btn" class="md:hidden text-gray-600 dark:text-gray-300 text-2xl">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+        </nav>
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="hidden md:hidden bg-white dark:bg-gray-800 py-4">
+            <a href="#home" class="block text-center py-2 text-lg hover:bg-gray-100 dark:hover:bg-gray-700">Start</a>
+            <a href="#termine" class="block text-center py-2 text-lg hover:bg-gray-100 dark:hover:bg-gray-700">Termine</a>
+            <a href="#galerie" class="block text-center py-2 text-lg hover:bg-gray-100 dark:hover:bg-gray-700">Galerie</a>
+            <a href="#verein" class="block text-center py-2 text-lg hover:bg-gray-100 dark:hover:bg-gray-700">Der Verein</a>
+            <a href="#brauchtum" class="block text-center py-2 text-lg hover:bg-gray-100 dark:hover:bg-gray-700">Brauchtum</a>
+            <a href="#vermietung" class="block text-center py-2 text-lg hover:bg-gray-100 dark:hover:bg-gray-700">Vermietung</a>
+            <a href="#kontakt" class="block text-center py-2 text-lg hover:bg-gray-100 dark:hover:bg-gray-700">Kontakt</a>
+            <a href="#impressum" class="block text-center py-2 text-lg hover:bg-gray-100 dark:hover:bg-gray-700">Impressum</a>
+            <a href="#datenschutz" class="block text-center py-2 text-lg hover:bg-gray-100 dark:hover:bg-gray-700">Datenschutz</a>
+        </div>
+    </header>
+
+    <main id="main-content">
+        <!-- Startseite -->
+        <section id="home" class="page-section min-h-screen flex items-center justify-center text-center bg-cover bg-center" style="background-image: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('https://placehold.co/1920x1080/3b82f6/ffffff?text=Vereinsleben');">
+            <div class="container mx-auto px-6 text-white">
+                <h1 id="home-title" class="jgv-editable text-5xl md:text-7xl font-black mb-4 animate-fade-in-down">JGV "Einigkeit" Kripp</h1>
+                <p id="home-subtitle" class="jgv-editable text-xl md:text-2xl mb-8 animate-fade-in-up">Tradition, Gemeinschaft und Zukunft seit 1888.</p>
+                <div class="bg-white/20 dark:bg-black/30 backdrop-blur-md p-6 rounded-lg max-w-4xl mx-auto">
+                    <h2 class="text-2xl font-bold mb-3">Das nächste Highlight</h2>
+                    <div id="next-event-container-home" class="text-lg">
+                        <!-- Nächstes Event wird hier von JS eingefügt -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Vereinsvorstellung & Statistiken -->
+        <section id="home-intro" class="page-section py-20 bg-gray-50 dark:bg-gray-900">
+            <div class="container mx-auto px-6">
+                 <div class="text-center mb-12">
+                    <h2 class="text-4xl font-bold mb-4">Willkommen beim JGV Kripp</h2>
+                    <p id="verein-intro-text" class="jgv-editable max-w-3xl mx-auto text-lg text-gray-600 dark:text-gray-400">
+                        Der Junggesellenverein "Einigkeit" Kripp ist mehr als nur ein Verein – wir sind eine Gemeinschaft, die Traditionen pflegt, Feste feiert und das Dorfleben aktiv mitgestaltet. Erfahren Sie mehr über uns und werden Sie Teil unserer Geschichte.
+                    </p>
+                </div>
+                 <div class="mt-12">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+                        <div>
+                            <i class="fas fa-calendar-alt text-4xl text-blue-500 mb-4"></i>
+                            <h3 id="stat-year" class="jgv-editable text-5xl font-bold">1888</h3>
+                            <p class="text-gray-500 dark:text-gray-400 mt-2">Gründungsjahr</p>
+                        </div>
+                        <div>
+                            <i class="fas fa-users text-4xl text-blue-500 mb-4"></i>
+                            <h3 id="stat-members" class="jgv-editable text-5xl font-bold">150</h3>
+                            <p class="text-gray-500 dark:text-gray-400 mt-2">Mitglieder</p>
+                        </div>
+                        <div>
+                            <i class="fas fa-glass-cheers text-4xl text-blue-500 mb-4"></i>
+                            <h3 id="stat-feste" class="jgv-editable text-5xl font-bold">5</h3>
+                            <p class="text-gray-500 dark:text-gray-400 mt-2">Jährliche Feste</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Termine -->
+        <section id="termine" class="page-section py-20">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-12">
+                    <h2 class="text-4xl font-bold mb-4">Unsere Termine</h2>
+                    <p class="max-w-3xl mx-auto text-lg text-gray-600 dark:text-gray-400">
+                        Hier finden Sie eine Übersicht über alle kommenden und vergangenen Veranstaltungen.
+                    </p>
+                </div>
+
+                <div class="mb-12 bg-white dark:bg-gray-800 p-2 sm:p-3 rounded-lg shadow-lg overflow-hidden max-w-4xl mx-auto">
+                     <div id="google-calendar-termine-embed" class="jgv-editable aspect-w-16 aspect-h-9">
+                           <!-- Kalender Iframe wird von JS hier eingefügt -->
+                     </div>
+                </div>
+
+                <div id="admin-event-form-container"></div>
+                <div id="timeline-container" class="timeline">
+                    <!-- Timeline items will be injected here by JavaScript -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Galerie -->
+        <section id="galerie" class="page-section py-20 bg-gray-50 dark:bg-gray-900">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-12">
+                    <h2 class="text-4xl font-bold mb-4">Fotogalerie</h2>
+                    <p id="gallery-intro-text" class="jgv-editable max-w-3xl mx-auto text-lg text-gray-600 dark:text-gray-400">
+                        Einblicke in unser Vereinsleben. Hier teilen wir die schönsten Momente unserer Feste und Aktivitäten.
+                    </p>
+                </div>
+                <div id="gallery-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    <!-- Gallery items will be injected here -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Der Verein -->
+        <section id="verein" class="page-section py-20">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-12">
+                    <h2 class="text-4xl font-bold mb-4">Unser Verein</h2>
+                    <p class="max-w-3xl mx-auto text-lg text-gray-600 dark:text-gray-400">Lernen Sie die Menschen kennen, die den Verein gestalten und führen.</p>
+                     <div class="flex flex-wrap justify-center gap-2 mt-6">
+                        <button data-verein-tab="vorstand" class="verein-tab-btn bg-blue-500 text-white py-2 px-4 rounded-full">Vorstand</button>
+                        <button data-verein-tab="amtstraeger" class="verein-tab-btn bg-gray-200 dark:bg-gray-700 py-2 px-4 rounded-full">Amtsträger</button>
+                        <button data-verein-tab="festausschuss" class="verein-tab-btn bg-gray-200 dark:bg-gray-700 py-2 px-4 rounded-full">Festausschuss</button>
+                        <button data-verein-tab="martinsausschuss" class="verein-tab-btn bg-gray-200 dark:bg-gray-700 py-2 px-4 rounded-full">Martinsausschuss</button>
+                    </div>
+                </div>
+               
+                <div id="verein-content" class="mt-8">
+                    <!-- Content for tabs will be injected here -->
+                </div>
+            </div>
+        </section>
+        
+        <!-- Brauchtum -->
+        <section id="brauchtum" class="page-section py-20 bg-gray-50 dark:bg-gray-900">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-12">
+                    <h2 class="text-4xl font-bold mb-4">Brauchtum & Tradition</h2>
+                    <p class="max-w-3xl mx-auto text-lg text-gray-600 dark:text-gray-400">Entdecken Sie die reiche Geschichte und die gelebten Traditionen unseres Vereins.</p>
+                    <div class="flex flex-wrap justify-center gap-2 mt-6">
+                        <button data-brauchtum-tab="geschichte" class="brauchtum-tab-btn bg-blue-500 text-white py-2 px-4 rounded-full">Geschichte</button>
+                        <button data-brauchtum-tab="chronik" class="brauchtum-tab-btn bg-gray-200 dark:bg-gray-700 py-2 px-4 rounded-full">Chronik der Könige</button>
+                        <button data-brauchtum-tab="kirmes" class="brauchtum-tab-btn bg-gray-200 dark:bg-gray-700 py-2 px-4 rounded-full">Kirmes</button>
+                        <button data-brauchtum-tab="maiabend" class="brauchtum-tab-btn bg-gray-200 dark:bg-gray-700 py-2 px-4 rounded-full">Maiabend</button>
+                        <button data-brauchtum-tab="strohbaertreiben" class="brauchtum-tab-btn bg-gray-200 dark:bg-gray-700 py-2 px-4 rounded-full">Strohbärtreiben</button>
+                        <button data-brauchtum-tab="martinstag" class="brauchtum-tab-btn bg-gray-200 dark:bg-gray-700 py-2 px-4 rounded-full">Martinstag</button>
+                        <button data-brauchtum-tab="faehndelschwenken" class="brauchtum-tab-btn bg-gray-200 dark:bg-gray-700 py-2 px-4 rounded-full">Fähndelschwenken</button>
+                    </div>
+                </div>
+                <div id="brauchtum-content" class="mt-8">
+                    <!-- Content for tabs will be injected here -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Vermietung -->
+        <section id="vermietung" class="page-section py-20">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-12">
+                    <h2 class="text-4xl font-bold mb-4">Vermietung Vereinsheim</h2>
+                    <p id="vermietung-intro-text" class="jgv-editable max-w-3xl mx-auto text-lg text-gray-600 dark:text-gray-400">
+                        Unser Vereinsheim kann für private Feiern gemietet werden. Hier finden Sie alle Informationen und den Belegungskalender.
+                    </p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+                    <div>
+                        <h3 class="text-2xl font-bold mb-4">Informationen</h3>
+                        <p id="vermietung-details-text" class="jgv-editable text-gray-700 dark:text-gray-300 mb-4">
+                            Unser Vereinsheim bietet Platz für bis zu 80 Personen und ist mit einer Theke, Küche und sanitären Anlagen ausgestattet. Ideal für Geburtstage, Jubiläen oder andere Feierlichkeiten. Für Terminanfragen und weitere Details kontaktieren Sie uns bitte über das Kontaktformular.
+                        </p>
+                        <ul class="space-y-2">
+                           <li class="jgv-editable" data-id="vermietung-li-1"><i class="fas fa-check-circle text-green-500 mr-2"></i>Großer Festsaal</li>
+                           <li class="jgv-editable" data-id="vermietung-li-2"><i class="fas fa-check-circle text-green-500 mr-2"></i>Voll ausgestattete Theke</li>
+                           <li class="jgv-editable" data-id="vermietung-li-3"><i class="fas fa-check-circle text-green-500 mr-2"></i>Moderne Küche</li>
+                           <li class="jgv-editable" data-id="vermietung-li-4"><i class="fas fa-check-circle text-green-500 mr-2"></i>Außenbereich mit Sitzgelegenheiten</li>
+                        </ul>
+                    </div>
+                    <div id="calendar-container" class="bg-white dark:bg-gray-800 p-2 sm:p-3 rounded-lg shadow-lg overflow-hidden">
+                        <!-- Google Calendar Embed -->
+                        <div id="google-calendar-embed" class="jgv-editable aspect-w-4 aspect-h-3">
+                           <!-- Iframe wird von JS hier eingefügt -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Kontakt -->
+        <section id="kontakt" class="page-section py-20 bg-gray-50 dark:bg-gray-900">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-12">
+                    <h2 class="text-4xl font-bold mb-4">Kontakt</h2>
+                </div>
+                <div class="max-w-xl mx-auto bg-white dark:bg-gray-800 p-8 rounded-lg shadow-lg text-center">
+                    <p id="kontakt-text" class="jgv-editable text-lg">
+                        Junggesellenverein "Einigkeit" Kripp<br>
+                        Musterstraße 1<br>
+                        53424 Remagen-Kripp<br><br>
+                        E-Mail: <a href="mailto:info@jgv-kripp.de" class="text-blue-500 hover:underline">info@jgv-kripp.de</a>
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Impressum -->
+        <section id="impressum" class="page-section py-20">
+             <div class="container mx-auto px-6">
+                <div class="text-center mb-12">
+                    <h2 class="text-4xl font-bold mb-4">Impressum</h2>
+                </div>
+                <div class="max-w-2xl mx-auto bg-white dark:bg-gray-800 p-8 rounded-lg shadow-lg">
+                    <div id="impressum-text" class="jgv-editable prose dark:prose-invert max-w-none">
+                        <!-- Impressum content from JS -->
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Datenschutz -->
+        <section id="datenschutz" class="page-section py-20 bg-gray-50 dark:bg-gray-900">
+             <div class="container mx-auto px-6">
+                <div class="text-center mb-12">
+                    <h2 class="text-4xl font-bold mb-4">Datenschutzerklärung</h2>
+                </div>
+                <div class="max-w-2xl mx-auto bg-white dark:bg-gray-800 p-8 rounded-lg shadow-lg">
+                     <div id="datenschutz-text" class="jgv-editable prose dark:prose-invert max-w-none">
+                        <!-- Datenschutz content from JS -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Member Area -->
+        <section id="member-area" class="page-section hidden py-20 bg-blue-50 dark:bg-gray-800">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-12">
+                    <h2 class="text-4xl font-bold mb-4">Mitgliederbereich</h2>
+                    <p class="max-w-3xl mx-auto text-lg text-gray-600 dark:text-gray-400">
+                        Willkommen im exklusiven Bereich für unsere Vereinsmitglieder.
+                    </p>
+                    <div class="flex justify-center space-x-2 mt-6">
+                        <button data-member-tab="koenigstipp" class="member-tab-btn bg-blue-500 text-white py-2 px-4 rounded-full">Königstipp</button>
+                        <button data-member-tab="dienstplan" class="member-tab-btn bg-gray-200 dark:bg-gray-700 py-2 px-4 rounded-full">Dienstplan</button>
+                        <button data-member-tab="dokumente" class="member-tab-btn bg-gray-200 dark:bg-gray-700 py-2 px-4 rounded-full">Dokumente</button>
+                    </div>
+                </div>
+
+                <div id="member-content" class="mt-8">
+                     <!-- Member content will be injected here -->
+                </div>
+            </div>
+        </section>
+        
+    </main>
+    
+    <!-- Footer -->
+    <footer class="bg-gray-800 dark:bg-black text-gray-300 py-8">
+        <div class="container mx-auto px-6 text-center">
+            <div class="flex justify-center space-x-6 mb-4">
+                <a href="#" class="text-2xl hover:text-blue-500 transition-colors"><i class="fab fa-facebook-f"></i></a>
+                <a href="#" class="text-2xl hover:text-pink-500 transition-colors"><i class="fab fa-instagram"></i></a>
+                <a href="#" class="text-2xl hover:text-blue-400 transition-colors"><i class="fab fa-twitter"></i></a>
+            </div>
+            <div class="my-4">
+                <a href="#impressum" class="hover:underline mx-2">Impressum</a> |
+                <a href="#datenschutz" class="hover:underline mx-2">Datenschutz</a>
+            </div>
+            <p>&copy; <span id="current-year"></span> JGV "Einigkeit" Kripp. Alle Rechte vorbehalten.</p>
+        </div>
+    </footer>
+
+    <!-- Login Modal -->
+    <div id="login-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-xl max-w-sm w-full">
+            <h2 class="text-2xl font-bold mb-6 text-center">Login</h2>
+            <div class="space-y-4">
+                <input type="password" id="password-input" placeholder="Passwort" class="w-full px-4 py-2 border border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <button id="submit-login-btn" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300">Anmelden</button>
+                <button id="cancel-login-btn" class="w-full bg-gray-200 hover:bg-gray-300 dark:bg-gray-600 dark:hover:bg-gray-500 text-gray-800 dark:text-gray-200 font-bold py-2 px-4 rounded-lg transition duration-300">Abbrechen</button>
+            </div>
+             <p id="login-error" class="text-red-500 text-sm mt-4 text-center hidden">Falsches Passwort!</p>
+        </div>
+    </div>
+    
+    <!-- Lightbox Modal -->
+    <div id="lightbox" class="hidden fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50">
+        <button id="lightbox-close" class="absolute top-4 right-6 text-white text-4xl font-bold">&times;</button>
+        <img id="lightbox-img" src="" class="max-w-[90vw] max-h-[85vh] rounded-lg">
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast-notification" class="hidden fixed bottom-5 right-5 bg-green-500 text-white py-2 px-5 rounded-lg shadow-lg animate-fade-in-up">
+        <p id="toast-message"></p>
+    </div>
+
+    <script>
+    // --- APP STATE AND INITIAL DATA ---
+    const APP_PREFIX = 'jgv-kripp-';
+
+    const initialData = {
+        content: {
+            'home-title': 'JGV "Einigkeit" Kripp',
+            'home-subtitle': 'Tradition, Gemeinschaft und Zukunft seit 1888.',
+            'verein-intro-text': 'Der Junggesellenverein "Einigkeit" Kripp ist mehr als nur ein Verein – wir sind eine Gemeinschaft, die Traditionen pflegt, Feste feiert und das Dorfleben aktiv mitgestaltet. Erfahren Sie mehr über uns und werden Sie Teil unserer Geschichte.',
+            'gallery-intro-text': 'Einblicke in unser Vereinsleben. Hier teilen wir die schönsten Momente unserer Feste und Aktivitäten.',
+            'vermietung-intro-text': 'Unser Vereinsheim kann für private Feiern gemietet werden. Hier finden Sie alle Informationen und den Belegungskalender.',
+            'vermietung-details-text': 'Unser Vereinsheim bietet Platz für bis zu 80 Personen und ist mit einer Theke, Küche und sanitären Anlagen ausgestattet. Ideal für Geburtstage, Jubiläen oder andere Feierlichkeiten. Für Terminanfragen und weitere Details kontaktieren Sie uns bitte über das Kontaktformular.',
+            'kontakt-text': `Junggesellenverein "Einigkeit" Kripp<br>Musterstraße 1<br>53424 Remagen-Kripp<br><br>E-Mail: <a href="mailto:info@jgv-kripp.de" class="text-blue-500 hover:underline">info@jgv-kripp.de</a>`,
+            'impressum-text': `<h3>Angaben gemäß § 5 TMG</h3>
+<p>Junggesellenverein "Einigkeit" Kripp<br>
+Musterstraße 1<br>
+53424 Remagen-Kripp</p>
+<p><strong>Vertreten durch:</strong><br>
+Max Mustermann (1. Vorsitzender)</p>
+<h3>Kontakt</h3>
+<p>Telefon: 0123-456789<br>
+E-Mail: info@jgv-kripp.de</p>
+<h3>Haftungsausschluss</h3>
+<p><strong>Haftung für Inhalte</strong></p>
+<p>Die Inhalte unserer Seiten wurden mit größter Sorgfalt erstellt. Für die Richtigkeit, Vollständigkeit und Aktualität der Inhalte können wir jedoch keine Gewähr übernehmen...</p>`,
+            'datenschutz-text': `<h3>1. Datenschutz auf einen Blick</h3>
+<p><strong>Allgemeine Hinweise</strong></p>
+<p>Die folgenden Hinweise geben einen einfachen Überblick darüber, was mit Ihren personenbezogenen Daten passiert, wenn Sie diese Website besuchen. Personenbezogene Daten sind alle Daten, mit denen Sie persönlich identifiziert werden können.</p>
+<h3>2. Datenerfassung auf dieser Website</h3>
+<p><strong>Wer ist verantwortlich für die Datenerfassung auf dieser Website?</strong></p>
+<p>Die Datenverarbeitung auf dieser Website erfolgt durch den Websitebetreiber. Dessen Kontaktdaten können Sie dem Impressum dieser Website entnehmen.</p>
+<p><em>(Dies ist ein Mustertext. Bitte lassen Sie ihn von einem Fachanwalt prüfen.)</em></p>`,
+            'vermietung-li-1': '<i class="fas fa-check-circle text-green-500 mr-2"></i>Großer Festsaal',
+            'vermietung-li-2': '<i class="fas fa-check-circle text-green-500 mr-2"></i>Voll ausgestattete Theke',
+            'vermietung-li-3': '<i class="fas fa-check-circle text-green-500 mr-2"></i>Moderne Küche',
+            'vermietung-li-4': '<i class="fas fa-check-circle text-green-500 mr-2"></i>Außenbereich mit Sitzgelegenheiten',
+            'stat-year': '1888',
+            'stat-members': '150',
+            'stat-feste': '5',
+            'google-calendar-embed': `<iframe src="https://calendar.google.com/calendar/embed?height=600&wkst=2&bgcolor=%23FFFFFF&ctz=Europe%2FBerlin&title=JGV%20Kripp%20Vermietung&showTz=0&showCalendars=0&showPrint=0&src=cGxhY2Vob2xkZXI&color=%231f2937" style="border-width:0" class="w-full h-full" frameborder="0" scrolling="no"></iframe>`,
+            'google-calendar-termine-embed': `<iframe src="https://calendar.google.com/calendar/embed?height=600&wkst=2&bgcolor=%23FFFFFF&ctz=Europe%2FBerlin&title=JGV%20Kripp%20Termine&src=cGxhY2Vob2xkZXI&color=%231f2937" style="border:solid 1px #777" class="w-full h-full" frameborder="0" scrolling="no"></iframe>`,
+            'vorstand-text': `<p class="text-lg text-gray-600 dark:text-gray-400 mb-6">Der Vorstand (8 Personen) leitet die Geschicke des Vereins, vertritt ihn nach außen und trifft strategische Entscheidungen. Er ist das Herz der Vereinsorganisation.</p><ul class="space-y-3 text-left max-w-md mx-auto"><li class="flex justify-between items-center"><span class="font-bold">1. Vorsitzender:</span> <span>Max Mustermann</span></li><li class="flex justify-between items-center"><span class="font-bold">2. Vorsitzender:</span> <span>Peter Müller</span></li><li class="flex justify-between items-center"><span class="font-bold">1. Kassierer:</span> <span>Jens Schmidt</span></li><li class="flex justify-between items-center"><span class="font-bold">2. Kassierer:</span> <span>Tom Becker</span></li><li class="flex justify-between items-center"><span class="font-bold">1. Schriftführer:</span> <span>Klaus Weber</span></li><li class="flex justify-between items-center"><span class="font-bold">2. Schriftführer:</span> <span>Lukas Klein</span></li><li class="flex justify-between items-center"><span class="font-bold">1. Beisitzer:</span> <span>Nico Berg</span></li><li class="flex justify-between items-center"><span class="font-bold">2. Beisitzer:</span> <span>Tim Wolf</span></li></ul>`,
+            'festausschuss-text': `<p class="text-lg text-gray-600 dark:text-gray-400 mb-6">Der Festausschuss (16 Personen) ist das kreative Herz des Vereins. Er plant und organisiert unvergessliche Veranstaltungen wie die Kirmes und das Sommerfest, kümmert sich um Dekoration, Musik und das leibliche Wohl.</p>`,
+            'martinsausschuss-text': `<p class="text-lg text-gray-600 dark:text-gray-400 mb-6">Dieser Ausschuss (6 Personen) kümmert sich speziell um die Organisation des traditionellen St. Martinszugs in Kripp, vom Martinsfeuer bis zur Ausgabe der Weckmänner an die Kinder.</p>`,
+            'amtstraeger-text': `<p class="text-lg text-gray-600 dark:text-gray-400 mb-6">Die Amtsträger repräsentieren den Verein bei offiziellen Anlässen und Festzügen. Sie sind die Hüter wichtiger Traditionen wie dem Fähndelschwenken.</p><ul class="space-y-3 text-left max-w-md mx-auto"><li class="flex justify-between items-center"><span class="font-bold">König (2025):</span> <span>Christian Laux</span></li><li class="flex justify-between items-center"><span class="font-bold">Hauptmann:</span> <span>Stefan Meier</span></li><li class="flex justify-between items-center"><span class="font-bold">Leutnant:</span> <span>Thomas Becker</span></li></ul>`,
+            'geschichte-text': `Gegründet im Jahre 1888, wurde das Vereinsleben durch den 1. Weltkrieg unterbrochen. Danach erblühte es neu, und das Königsschießen wurde eingeführt. Ein Meilenstein war die Gründung des Tambourcorps am 14. Mai 1949, das bis heute ein wichtiger Teil des Vereins ist. Die Königskette symbolisiert die Verbundenheit über Generationen hinweg, da ihr alter Teil den Krieg vergraben überstand und später geborgen wurde.`,
+            'kirmes-text': 'Die Kripper Kirmes ist das größte Fest im Dorf und der Höhepunkt unseres Vereinsjahres. Vier Tage lang wird im Festzelt gefeiert, getanzt und gelacht. Vom Fassanstich am Freitag bis zum Königsball am Montag ist für Jung und Alt etwas geboten.',
+            'maiabend-text': 'Der Maiabend leitet traditionell den Wonnemonat ein. Mit dem Aufstellen des Maibaums am Dorfplatz und dem anschließenden Fest wird der Frühling in Kripp gebührend begrüßt.',
+            'strohbaertreiben-text': 'Ein besonderer Brauch ist das Strohbärtreiben an Karneval, bei dem der Winter symbolisch ausgetrieben wird – eine Tradition, die seit 1927 ohne Unterbrechung gepflegt wird. Der in Stroh gewickelte Bär wird von den Kindern durchs Dorf getrieben.',
+            'martinstag-text': 'Am Martinstag begleiten wir den Martinszug durch das Dorf und helfen bei der Organisation des großen Martinsfeuers. Im Anschluss erhalten die Kinder traditionell ihre Weckmänner.',
+            'faehndelschwenken-text': 'Das Fähndelschwenken ist eine hohe Kunst und fester Bestandteil unserer Festzüge. Unsere Fähnriche repräsentieren den Verein mit Stolz und Eleganz. Das Schwenken der großen Vereinsfahne erfordert Kraft, Geschick und viel Übung.'
+        },
+        events: [
+            { id: 1, date: '2025-11-11', title: 'St. Martin', description: 'Begleitung des St. Martinszugs durch das Dorf mit anschließendem Martinsfeuer.', type: 'public', details: 'Wir treffen uns um 17:30 Uhr an der Grundschule, um den Zug mit Fackeln zu begleiten. Im Anschluss gibt es am Martinsfeuer Glühwein und Kinderpunsch für alle Helfer.' },
+            { id: 2, date: '2026-05-28', title: 'Kirmes-Wochenende', description: 'Das Highlight des Jahres! Kirmes in Kripp mit Live-Musik und Königsball.', type: 'public', details: 'Freitag: 90er Party mit DJ. Samstag: Kölsche Nacht. Sonntag: Bürgerfrühstück und Familiennachmittag. Montag: Traditioneller Königsball.' },
+            { id: 3, date: '2026-08-15', title: 'Sommerfest', description: 'Großes Sommerfest für Mitglieder und Freunde des Vereins mit Grillen und kühlen Getränken.', type: 'public', details: 'Ab 15 Uhr auf dem Vereinsgelände. Für das leibliche Wohl ist bestens gesorgt. Wir freuen uns auf einen gemütlichen Nachmittag mit euch!' },
+            { id: 4, date: '2025-12-20', title: 'Weihnachtsfeier', description: 'Interne Weihnachtsfeier für alle Mitglieder.', type: 'internal', details: 'Unsere jährliche Weihnachtsfeier findet im Vereinsheim statt. Beginn ist um 19 Uhr. Bitte tragt euch in die Liste im Mitgliederbereich für das Essen ein.' },
+            { id: 5, date: '2025-09-10', title: 'Vergangenes Event', description: 'Dies ist ein Test für ein vergangenes Event.', type: 'public', details: 'Hier standen die Details des vergangenen Events.' }
+        ],
+        koenigsarchiv: [
+            { year: 2025, name: 'Christian Laux' }, { year: 2024, name: 'Tim Weber' }, { year: 2023, name: 'Martin Doll' }, { year: 2022, name: 'Lukas Boes' }, { year: 2020, name: 'COVID-19 Pause' }, { year: 2019, name: 'Niklas Reich' },
+        ],
+        gallery: Array.from({ length: 12 }, (_, i) => ({ id: i + 1, thumb: `https://placehold.co/400x300/60a5fa/ffffff?text=Foto+${i+1}`, full: `https://placehold.co/1200x900/60a5fa/ffffff?text=Foto+${i+1}` })),
+        koenigstipp: { locked: false, winner: null, tips: [{ user: 'Max M.', tip: 'Peter Schmidt' },{ user: 'Anna K.', tip: 'Stefan Meier' }] },
+        dienstplan: { 'freitag-theke-1': null, 'freitag-theke-2': 'Klaus B.', 'freitag-grill-1': null, 'samstag-theke-1': 'Julia S.', 'samstag-theke-2': null, 'samstag-grill-1': null, 'sonntag-theke-1': null, 'sonntag-theke-2': null, 'sonntag-grill-1': 'Markus T.' }
+    };
+
+    // --- UTILITY AND STATE MANAGEMENT FUNCTIONS ---
+    
+    const ls = {
+        get: (key, fallback) => {
+            const val = localStorage.getItem(APP_PREFIX + key);
+            try { return val ? JSON.parse(val) : fallback; } catch (e) { return val || fallback; }
+        },
+        set: (key, value) => { localStorage.setItem(APP_PREFIX + key, JSON.stringify(value)); }
+    };
+
+    let state = {
+        authLevel: 'public', // public, member, admin
+        editableContent: ls.get('content', initialData.content),
+        events: ls.get('events', initialData.events),
+        koenigstipp: ls.get('koenigstipp', initialData.koenigstipp),
+        dienstplan: ls.get('dienstplan', initialData.dienstplan),
+        koenigsarchiv: ls.get('koenigsarchiv', initialData.koenigsarchiv)
+    };
+    
+    // --- RENDER FUNCTIONS ---
+
+    function renderAll() {
+        renderEditableContent();
+        renderTimeline();
+        renderNextEventHome();
+        renderGallery();
+        renderVereinContent('vorstand');
+        renderBrauchtumContent('geschichte');
+        renderMemberContent('koenigstipp');
+        updateUIforAuthState();
+    }
+    
+    function renderEditableContent() {
+        document.querySelectorAll('.jgv-editable').forEach(el => {
+            const id = el.id || el.dataset.id;
+            if (id && state.editableContent[id]) {
+                el.innerHTML = state.editableContent[id];
+            }
+        });
+    }
+    
+    function renderTimeline() {
+        const container = document.getElementById('timeline-container');
+        if (!container) return;
+        const now = new Date();
+        now.setHours(0, 0, 0, 0);
+        const publicEvents = state.events.filter(event => state.authLevel !== 'public' || event.type === 'public');
+        const sortedEvents = [
+            ...publicEvents.filter(event => new Date(event.date) >= now).sort((a, b) => new Date(a.date) - new Date(b.date)),
+            ...publicEvents.filter(event => new Date(event.date) < now).sort((a, b) => new Date(b.date) - new Date(a.date))
+        ];
+        
+        if(sortedEvents.length === 0) {
+            container.innerHTML = `<p class="text-center text-gray-500">Aktuell sind keine Termine verfügbar.</p>`;
+            return;
+        }
+
+        container.innerHTML = sortedEvents.map((event, index) => {
+            const eventDate = new Date(event.date);
+            const isPast = eventDate < now;
+            const side = index % 2 === 0 ? 'left' : 'right';
+            const internalBadge = event.type === 'internal' ? '<span class="absolute top-2 right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full z-10">INTERN</span>' : '';
+            const adminControls = state.authLevel === 'admin' ? `
+                <div class="absolute top-2 left-2 flex gap-2">
+                    <button onclick="openEventEditor(${event.id})" class="text-sm bg-blue-500 hover:bg-blue-600 text-white w-7 h-7 rounded-full flex items-center justify-center transition-transform hover:scale-110" title="Bearbeiten"><i class="fas fa-pencil-alt"></i></button>
+                    <button onclick="deleteEvent(${event.id})" class="text-sm bg-red-500 hover:bg-red-600 text-white w-7 h-7 rounded-full flex items-center justify-center transition-transform hover:scale-110" title="Löschen"><i class="fas fa-trash-alt"></i></button>
+                </div>` : '';
+            const detailsButton = event.details ? `<button data-toggle-details="${event.id}" class="mt-3 text-sm text-blue-500 hover:underline">Mehr Details <i class="fas fa-chevron-down text-xs transition-transform"></i></button>` : '';
+
+            return `
+            <div class="timeline-container ${side}">
+                <div class="timeline-content bg-white dark:bg-gray-800 shadow-lg ${isPast ? 'opacity-60' : ''}">
+                    ${internalBadge}
+                    ${adminControls}
+                    <h2 class="text-xl font-bold text-blue-500 mt-8 sm:mt-0">${event.title}</h2>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">${eventDate.toLocaleDateString('de-DE', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
+                    <p class="text-gray-700 dark:text-gray-300" data-id="event-desc-${event.id}">${event.description}</p>
+                    ${detailsButton}
+                    <div id="details-${event.id}" class="details-content text-left text-gray-600 dark:text-gray-400 mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">${event.details || ''}</div>
+                </div>
+            </div>`;
+        }).join('');
+        
+        setupTimelineAnimation();
+    }
+
+    function renderNextEventHome() {
+        const container = document.getElementById('next-event-container-home');
+        const now = new Date();
+        const upcomingEvent = [...state.events]
+            .filter(e => e.type === 'public' && new Date(e.date) >= now)
+            .sort((a, b) => new Date(a.date) - new Date(b.date))[0];
+
+        if (upcomingEvent) {
+            const eventDate = new Date(upcomingEvent.date);
+            const detailsButton = upcomingEvent.details ? `<button data-toggle-details="home-${upcomingEvent.id}" class="mt-4 text-sm bg-white/30 hover:bg-white/50 text-white font-semibold py-2 px-4 rounded-full transition-colors">Mehr erfahren <i class="fas fa-chevron-down text-xs transition-transform"></i></button>` : '';
+            container.innerHTML = `
+                <p class="text-3xl font-bold">${upcomingEvent.title}</p>
+                <p class="text-xl mt-1">${eventDate.toLocaleDateString('de-DE', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })}</p>
+                <p class="mt-4 text-gray-200 max-w-2xl mx-auto">${upcomingEvent.description}</p>
+                <div class="mt-4">${detailsButton}</div>
+                <div id="details-home-${upcomingEvent.id}" class="details-content text-left text-gray-200 mt-3 pt-3 border-t border-white/30">${upcomingEvent.details || ''}</div>
+                `;
+        } else {
+            container.innerHTML = `<p>Zurzeit sind keine öffentlichen Termine geplant.</p>`;
+        }
+    }
+    
+    function renderGallery() {
+        const grid = document.getElementById('gallery-grid');
+        grid.innerHTML = initialData.gallery.map(img => `<div class="aspect-w-4 aspect-h-3"><img src="${img.thumb}" data-full="${img.full}" alt="Galeriebild ${img.id}" class="w-full h-full object-cover rounded-lg shadow-md cursor-pointer hover:scale-105 transform transition-transform duration-300"></div>`).join('');
+    }
+
+    function renderVereinContent(tab) {
+        const container = document.getElementById('verein-content');
+        if (!container) return;
+        let content = '';
+        const baseLayout = (textId) => `<div class="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-lg max-w-4xl mx-auto text-center"><div class="jgv-editable" data-id="${textId}"></div></div>`;
+        switch(tab) {
+            case 'vorstand': content = baseLayout('vorstand-text'); break;
+            case 'amtstraeger': content = baseLayout('amtstraeger-text'); break;
+            case 'festausschuss': content = baseLayout('festausschuss-text'); break;
+            case 'martinsausschuss': content = baseLayout('martinsausschuss-text'); break;
+        }
+        container.innerHTML = content;
+        renderEditableContent();
+    }
+
+    function renderBrauchtumContent(tab) {
+        const container = document.getElementById('brauchtum-content');
+        if (!container) return;
+        let content = '';
+        const baseLayout = (textId) => `<div class="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-lg max-w-4xl mx-auto"><h3 class="text-3xl font-bold mb-4 text-center">${document.querySelector(`[data-brauchtum-tab="${tab}"]`).textContent}</h3><p class="jgv-editable text-lg text-gray-600 dark:text-gray-400" data-id="${textId}"></p></div>`;
+        switch(tab) {
+            case 'geschichte': content = baseLayout('geschichte-text'); break;
+            case 'chronik':
+                content = `<div class="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-lg max-w-4xl mx-auto"><h3 class="text-3xl font-bold mb-6 text-center">Chronik der Könige</h3><div id="koenigsarchiv-container" class="overflow-x-auto"></div></div>`;
+                break;
+            case 'kirmes': content = baseLayout('kirmes-text'); break;
+            case 'maiabend': content = baseLayout('maiabend-text'); break;
+            case 'strohbaertreiben': content = baseLayout('strohbaertreiben-text'); break;
+            case 'martinstag': content = baseLayout('martinstag-text'); break;
+            case 'faehndelschwenken': content = baseLayout('faehndelschwenken-text'); break;
+        }
+        container.innerHTML = content;
+        if(tab === 'chronik') renderKoenigsarchiv();
+        renderEditableContent();
+    }
+
+    function renderKoenigsarchiv() {
+        const container = document.getElementById('koenigsarchiv-container');
+        if(!container) return;
+        container.innerHTML = `<table class="w-full text-left border-collapse"><thead><tr class="bg-gray-100 dark:bg-gray-700"><th class="p-3 font-bold uppercase text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-600">Jahr</th><th class="p-3 font-bold uppercase text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-600">König</th></tr></thead><tbody>
+            ${state.koenigsarchiv.sort((a,b) => b.year - a.year).map(king => `<tr class="hover:bg-gray-50 dark:hover:bg-gray-800"><td class="p-3 border border-gray-300 dark:border-gray-600">${king.year}</td><td class="p-3 border border-gray-300 dark:border-gray-600">${king.name}</td></tr>`).join('')}</tbody></table>`;
+    }
+    
+    function renderMemberContent(tab) {
+        const container = document.getElementById('member-content');
+        if(!container) return;
+        let content = '';
+        switch(tab) {
+            case 'koenigstipp':
+                const { locked, winner, tips } = state.koenigstipp;
+                const adminControls = state.authLevel === 'admin' ? `<div class="flex justify-center space-x-4 mb-6"><button id="toggle-tipp-lock" class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded">${locked ? 'Spiel entsperren' : 'Spiel sperren'}</button><button id="declare-winner-btn" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded">Gewinner ausrufen</button></div>` : '';
+                const statusMessage = winner ? `<div class="bg-green-100 dark:bg-green-900 border-l-4 border-green-500 text-green-700 dark:text-green-200 p-4 mb-6 rounded-r-lg" role="alert"><p class="font-bold">Der Gewinner ist ${winner}!</p></div>` : (locked ? `<div class="bg-yellow-100 dark:bg-yellow-900 border-l-4 border-yellow-500 text-yellow-700 dark:text-yellow-200 p-4 mb-6 rounded-r-lg" role="alert"><p>Das Tippspiel ist geschlossen.</p></div>` : '');
+                content = `<div class="max-w-4xl mx-auto bg-white dark:bg-gray-900 p-8 rounded-lg shadow-lg"><h3 class="text-3xl font-bold mb-4 text-center">Königstipp-Spiel</h3>${adminControls}${statusMessage}${!locked && !winner ? `<form id="koenigstipp-form" class="mb-8 flex flex-col sm:flex-row gap-4"><input type="text" id="tipp-user" required placeholder="Dein Name" class="flex-grow px-4 py-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700"><input type="text" id="tipp-guess" required placeholder="Name des Tipps" class="flex-grow px-4 py-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700"><button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg">Tipp abgeben</button></form>` : ''}<h4 class="text-2xl font-bold mb-4">Abgegebene Tipps:</h4><ul id="tipp-list" class="space-y-2">${tips.map(t => `<li class="p-3 bg-gray-100 dark:bg-gray-800 rounded-lg flex justify-between"><strong>${t.user}:</strong> <span>${t.tip}</span></li>`).join('')}</ul></div>`;
+                break;
+            case 'dienstplan':
+                content = `<div class="max-w-5xl mx-auto bg-white dark:bg-gray-900 p-8 rounded-lg shadow-lg"><h3 class="text-3xl font-bold mb-6 text-center">Digitaler Dienstplan (Kirmes)</h3><div class="overflow-x-auto"><table class="w-full text-left border-collapse"><thead><tr class="bg-gray-100 dark:bg-gray-800"><th class="p-3 font-bold uppercase text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-600">Schicht</th><th class="p-3 font-bold uppercase text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-600">Theke 1</th><th class="p-3 font-bold uppercase text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-600">Theke 2</th><th class="p-3 font-bold uppercase text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-600">Grill</th></tr></thead><tbody>${generateDienstplanRow('Freitag', 'freitag')}${generateDienstplanRow('Samstag', 'samstag')}${generateDienstplanRow('Sonntag', 'sonntag')}</tbody></table></div></div>`;
+                break;
+            case 'dokumente':
+                content = `<div class="max-w-4xl mx-auto bg-white dark:bg-gray-900 p-8 rounded-lg shadow-lg text-center"><h3 class="text-3xl font-bold mb-4">Dokumentenarchiv</h3><i class="fas fa-hard-hat text-6xl text-yellow-500 my-6"></i><p class="text-xl text-gray-600 dark:text-gray-400">Dieser Bereich ist noch im Aufbau.</p></div>`;
+                break;
+        }
+        container.innerHTML = content;
+    }
+    
+    function generateDienstplanRow(dayLabel, dayId) {
+        return `<tr class="hover:bg-gray-50 dark:hover:bg-gray-800"><td class="p-3 font-bold border border-gray-300 dark:border-gray-600">${dayLabel}</td>${generateDienstplanCell(`${dayId}-theke-1`)}${generateDienstplanCell(`${dayId}-theke-2`)}${generateDienstplanCell(`${dayId}-grill-1`)}</tr>`;
+    }
+
+    function generateDienstplanCell(slotId) {
+        const name = state.dienstplan[slotId];
+        const cellContent = name ? `<span class="font-semibold">${name}</span>` : `<button class="w-full text-center text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300">Eintragen</button>`;
+        return `<td data-slot-id="${slotId}" class="p-3 border border-gray-300 dark:border-gray-600 text-center cursor-pointer dienstplan-slot">${cellContent}</td>`;
+    }
+
+    // --- UI AND EVENT HANDLERS ---
+    
+    document.addEventListener('DOMContentLoaded', () => {
+        if (ls.get('theme') === 'dark' || (!ls.get('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+            document.querySelector('#theme-toggle .fa-sun').classList.add('hidden');
+            document.querySelector('#theme-toggle .fa-moon').classList.remove('hidden');
+        }
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+        renderAll();
+        const counters = document.querySelectorAll('.jgv-editable[id^="stat-"]');
+        const observer = new IntersectionObserver(entries => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const counter = entry.target;
+                    const target = parseInt(counter.textContent.replace(/\D/g, '')) || 0;
+                    let current = 0;
+                    const increment = Math.max(1, target / 100);
+                    const updateCounter = () => {
+                        if (current < target) {
+                            current += increment;
+                            if (current > target) current = target;
+                            counter.innerText = Math.ceil(current);
+                            requestAnimationFrame(updateCounter);
+                        } else {
+                            counter.innerText = target;
+                        }
+                    };
+                    updateCounter();
+                    observer.unobserve(counter);
+                }
+            });
+        }, { threshold: 0.5 });
+        counters.forEach(counter => observer.observe(counter));
+        setupEventListeners();
+        navigateTo(window.location.hash.substring(1) || 'home');
+    });
+
+    function setupTimelineAnimation() {
+        const timelineItems = document.querySelectorAll('.timeline-container');
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('is-visible');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.1 });
+        timelineItems.forEach(item => observer.observe(item));
+    }
+    
+    function setupEventListeners() {
+        document.getElementById('theme-toggle').addEventListener('click', () => {
+            document.documentElement.classList.toggle('dark');
+            const isDark = document.documentElement.classList.contains('dark');
+            ls.set('theme', isDark ? 'dark' : 'light');
+            document.querySelector('#theme-toggle .fa-sun').classList.toggle('hidden', isDark);
+            document.querySelector('#theme-toggle .fa-moon').classList.toggle('hidden', !isDark);
+        });
+
+        document.getElementById('mobile-menu-btn').addEventListener('click', () => {
+            document.getElementById('mobile-menu').classList.toggle('hidden');
+        });
+        
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href').substring(1);
+                navigateTo(targetId);
+                document.getElementById('mobile-menu').classList.add('hidden');
+            });
+        });
+
+        const loginModal = document.getElementById('login-modal');
+        document.getElementById('login-btn').addEventListener('click', () => loginModal.classList.remove('hidden'));
+        document.getElementById('cancel-login-btn').addEventListener('click', () => {
+            loginModal.classList.add('hidden');
+            document.getElementById('login-error').classList.add('hidden');
+            document.getElementById('password-input').value = '';
+        });
+        document.getElementById('submit-login-btn').addEventListener('click', handleLogin);
+        document.getElementById('password-input').addEventListener('keypress', (e) => { if (e.key === 'Enter') handleLogin(); });
+        document.getElementById('logout-btn').addEventListener('click', handleLogout);
+
+        const lightbox = document.getElementById('lightbox');
+        document.getElementById('gallery-grid').addEventListener('click', e => {
+            if (e.target.tagName === 'IMG') {
+                document.getElementById('lightbox-img').src = e.target.dataset.full;
+                lightbox.classList.remove('hidden');
+            }
+        });
+        document.getElementById('lightbox-close').addEventListener('click', () => lightbox.classList.add('hidden'));
+        lightbox.addEventListener('click', (e) => { if(e.target.id === 'lightbox') lightbox.classList.add('hidden'); });
+
+        document.querySelector('#verein .flex').addEventListener('click', e => {
+            if (e.target.matches('.verein-tab-btn')) {
+                document.querySelectorAll('#verein .verein-tab-btn').forEach(btn => {
+                    btn.classList.remove('bg-blue-500', 'text-white');
+                    btn.classList.add('bg-gray-200', 'dark:bg-gray-700');
+                });
+                e.target.classList.add('bg-blue-500', 'text-white');
+                e.target.classList.remove('bg-gray-200', 'dark:bg-gray-700');
+                renderVereinContent(e.target.dataset.vereinTab);
+            }
+        });
+        
+        document.querySelector('#brauchtum .flex').addEventListener('click', e => {
+            if (e.target.matches('.brauchtum-tab-btn')) {
+                document.querySelectorAll('#brauchtum .brauchtum-tab-btn').forEach(btn => {
+                    btn.classList.remove('bg-blue-500', 'text-white');
+                    btn.classList.add('bg-gray-200', 'dark:bg-gray-700');
+                });
+                e.target.classList.add('bg-blue-500', 'text-white');
+                e.target.classList.remove('bg-gray-200', 'dark:bg-gray-700');
+                renderBrauchtumContent(e.target.dataset.brauchtumTab);
+            }
+        });
+
+        document.getElementById('save-changes-btn')?.addEventListener('click', saveContentChanges);
+        document.getElementById('exit-admin-btn')?.addEventListener('click', handleLogout);
+        
+        const eventFormContainer = document.getElementById('admin-event-form-container');
+        eventFormContainer.addEventListener('submit', handleEventFormSubmit);
+        eventFormContainer.addEventListener('click', (e) => { if (e.target.id === 'cancel-edit-btn') resetEventForm(); });
+
+        document.getElementById('main-content').addEventListener('click', (e) => {
+            const toggleBtn = e.target.closest('[data-toggle-details]');
+            if (toggleBtn) {
+                const eventId = toggleBtn.dataset.toggleDetails;
+                const detailsDiv = document.getElementById(`details-${eventId}`);
+                const icon = toggleBtn.querySelector('i');
+                if (detailsDiv) {
+                    detailsDiv.classList.toggle('open');
+                    icon.classList.toggle('rotate-180');
+                    if (detailsDiv.style.maxHeight) {
+                        detailsDiv.style.maxHeight = null;
+                    } else {
+                        detailsDiv.style.maxHeight = detailsDiv.scrollHeight + "px";
+                    }
+                }
+            }
+        });
+
+        document.getElementById('member-content').addEventListener('click', handleMemberAreaClicks);
+        document.getElementById('member-content').addEventListener('submit', handleMemberAreaSubmits);
+        document.querySelector('#member-area .flex').addEventListener('click', handleMemberTabSwitch);
+    }
+    
+    function navigateTo(pageId) {
+        document.querySelectorAll('.page-section').forEach(section => {
+            if (section.id !== 'member-area') section.classList.add('hidden');
+        });
+        let targetSection = document.getElementById(pageId);
+        if (document.querySelector(`[data-verein-tab="${pageId}"]`)) targetSection = document.getElementById('verein');
+        if (document.querySelector(`[data-brauchtum-tab="${pageId}"]`)) targetSection = document.getElementById('brauchtum');
+        if (document.querySelector(`[data-member-tab="${pageId}"]`)) targetSection = document.getElementById('member-area');
+        if (targetSection) {
+            targetSection.classList.remove('hidden');
+            if (pageId === 'home') document.getElementById('home-intro').classList.remove('hidden');
+            window.history.pushState(null, '', `#${pageId}`);
+            window.scrollTo(0,0);
+        } else {
+             document.getElementById('home').classList.remove('hidden');
+             document.getElementById('home-intro').classList.remove('hidden');
+             window.history.pushState(null, '', `#home`);
+        }
+    }
+
+    // --- AUTHENTICATION AND ADMIN LOGIC ---
+    
+    function handleLogin() {
+        const password = document.getElementById('password-input').value;
+        const errorMsg = document.getElementById('login-error');
+        if (password === 'admin123') { state.authLevel = 'admin'; showToast('Admin-Login erfolgreich!');
+        } else if (password === 'member123') { state.authLevel = 'member'; showToast('Mitglieder-Login erfolgreich!');
+        } else { errorMsg.classList.remove('hidden'); return; }
+        document.getElementById('login-modal').classList.add('hidden');
+        document.getElementById('password-input').value = '';
+        errorMsg.classList.add('hidden');
+        updateUIforAuthState();
+        navigateTo('home');
+    }
+
+    function handleLogout() {
+        if(state.authLevel === 'admin') {
+            document.body.classList.remove('jgv-editing');
+            document.getElementById('admin-bar').classList.add('hidden');
+            document.querySelectorAll('.jgv-editable').forEach(el => el.setAttribute('contenteditable', 'false'));
+        }
+        state.authLevel = 'public';
+        updateUIforAuthState();
+        showToast('Erfolgreich ausgeloggt.');
+        navigateTo('home');
+    }
+    
+    function updateUIforAuthState() {
+        const loginBtn = document.getElementById('login-btn');
+        const logoutBtn = document.getElementById('logout-btn');
+        const memberAreaSection = document.getElementById('member-area');
+        loginBtn.classList.toggle('hidden', state.authLevel !== 'public');
+        logoutBtn.classList.toggle('hidden', state.authLevel === 'public');
+        if (state.authLevel !== 'public') {
+            logoutBtn.innerHTML = `<i class="fas fa-sign-out-alt mr-2"></i>Logout (${state.authLevel})`;
+        } else {
+             memberAreaSection.classList.add('hidden');
+        }
+        if(state.authLevel === 'admin') {
+            document.body.classList.add('jgv-editing', 'pt-12');
+            document.getElementById('admin-bar').classList.remove('hidden');
+            document.querySelectorAll('.jgv-editable').forEach(el => el.setAttribute('contenteditable', 'true'));
+            renderAdminEventForm();
+        } else {
+             document.body.classList.remove('jgv-editing', 'pt-12');
+             document.getElementById('admin-bar')?.classList.add('hidden');
+             document.querySelectorAll('.jgv-editable').forEach(el => el.setAttribute('contenteditable', 'false'));
+             document.getElementById('admin-event-form-container').innerHTML = '';
+        }
+        renderTimeline();
+        renderMemberContent(document.querySelector('#member-area .member-tab-btn.bg-blue-500')?.dataset.memberTab || 'koenigstipp');
+    }
+
+    function saveContentChanges() {
+        document.querySelectorAll('.jgv-editable').forEach(el => {
+            const id = el.id || el.dataset.id;
+            if (id) state.editableContent[id] = el.innerHTML;
+        });
+        ls.set('content', state.editableContent);
+        showToast('Änderungen wurden gespeichert!', 'success');
+    }
+
+    function renderAdminEventForm() {
+        const container = document.getElementById('admin-event-form-container');
+        if(!container) return;
+        container.innerHTML = `
+            <form id="event-form" class="max-w-xl mx-auto my-6 bg-gray-100 dark:bg-gray-800 p-6 rounded-lg shadow-md text-left">
+                <h3 id="event-form-title" class="text-xl font-bold mb-4">Neuen Termin hinzufügen</h3>
+                <input type="hidden" id="event-id">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <input type="text" id="event-title" placeholder="Titel" required class="p-2 rounded border dark:bg-gray-700 dark:border-gray-600">
+                    <input type="date" id="event-date" required class="p-2 rounded border dark:bg-gray-700 dark:border-gray-600">
+                </div>
+                <textarea id="event-desc" placeholder="Kurzbeschreibung" rows="3" class="w-full mt-4 p-2 rounded border dark:bg-gray-700 dark:border-gray-600"></textarea>
+                <textarea id="event-details" placeholder="Detaillierte Informationen (optional)" rows="5" class="w-full mt-4 p-2 rounded border dark:bg-gray-700 dark:border-gray-600"></textarea>
+                <div class="mt-4 flex items-center justify-between">
+                    <label class="flex items-center select-none"><input type="checkbox" id="event-internal" class="mr-2 h-4 w-4"> Interner Termin</label>
+                    <div class="flex gap-2">
+                         <button type="button" id="cancel-edit-btn" class="hidden bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded">Abbrechen</button>
+                         <button type="submit" id="event-submit-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">Hinzufügen</button>
+                    </div>
+                </div>
+            </form>`;
+    }
+    
+    function handleEventFormSubmit(e) {
+        e.preventDefault();
+        if (e.target.id !== 'event-form') return;
+        const eventId = document.getElementById('event-id').value;
+        const eventData = {
+            title: document.getElementById('event-title').value,
+            date: document.getElementById('event-date').value,
+            description: document.getElementById('event-desc').value,
+            details: document.getElementById('event-details').value,
+            type: document.getElementById('event-internal').checked ? 'internal' : 'public'
+        };
+        if (eventId) {
+            const index = state.events.findIndex(e => e.id == eventId);
+            if (index > -1) state.events[index] = { ...state.events[index], ...eventData };
+            showToast('Termin aktualisiert!');
+        } else {
+            const newEvent = { id: Date.now(), ...eventData };
+            state.events.push(newEvent);
+            showToast('Termin hinzugefügt!');
+        }
+        ls.set('events', state.events);
+        renderTimeline();
+        renderNextEventHome();
+        resetEventForm();
+    }
+    
+    function resetEventForm() {
+        const form = document.getElementById('event-form');
+        if (!form) return;
+        form.reset();
+        document.getElementById('event-id').value = '';
+        document.getElementById('event-form-title').textContent = 'Neuen Termin hinzufügen';
+        document.getElementById('event-submit-btn').textContent = 'Hinzufügen';
+        document.getElementById('cancel-edit-btn').classList.add('hidden');
+    }
+
+    function openEventEditor(eventId) {
+        const event = state.events.find(e => e.id === eventId);
+        if (!event) return;
+        const form = document.getElementById('event-form');
+        if (!form) renderAdminEventForm();
+        document.getElementById('event-form-title').textContent = 'Termin bearbeiten';
+        document.getElementById('event-id').value = event.id;
+        document.getElementById('event-title').value = event.title;
+        document.getElementById('event-date').value = event.date;
+        document.getElementById('event-desc').value = event.description;
+        document.getElementById('event-details').value = event.details || '';
+        document.getElementById('event-internal').checked = event.type === 'internal';
+        document.getElementById('event-submit-btn').textContent = 'Aktualisieren';
+        document.getElementById('cancel-edit-btn').classList.remove('hidden');
+        form.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function deleteEvent(eventId) {
+        state.events = state.events.filter(e => e.id !== eventId);
+        ls.set('events', state.events);
+        renderTimeline();
+        renderNextEventHome();
+        showToast('Termin wurde gelöscht.');
+    }
+    
+    // --- MEMBER AREA EVENT HANDLERS ---
+    
+    function handleMemberTabSwitch(e) {
+        if (e.target.matches('.member-tab-btn')) {
+            document.querySelectorAll('#member-area .member-tab-btn').forEach(btn => {
+                btn.classList.remove('bg-blue-500', 'text-white');
+                btn.classList.add('bg-gray-200', 'dark:bg-gray-700');
+            });
+            e.target.classList.add('bg-blue-500', 'text-white');
+            e.target.classList.remove('bg-gray-200', 'dark:bg-gray-700');
+            renderMemberContent(e.target.dataset.memberTab);
+        }
+    }
+
+    function handleMemberAreaSubmits(e) {
+        if(e.target.id === 'koenigstipp-form') {
+            e.preventDefault();
+            const user = document.getElementById('tipp-user').value.trim();
+            const tip = document.getElementById('tipp-guess').value.trim();
+            if(user && tip) {
+                state.koenigstipp.tips.push({ user, tip });
+                ls.set('koenigstipp', state.koenigstipp);
+                renderMemberContent('koenigstipp');
+                showToast('Tipp erfolgreich abgegeben!');
+            }
+        }
+    }
+    
+    function handleMemberAreaClicks(e) {
+        const target = e.target;
+        if (target.closest('.dienstplan-slot')) {
+            const slot = target.closest('.dienstplan-slot');
+            const slotId = slot.dataset.slotId;
+            const currentName = state.dienstplan[slotId];
+            if (currentName) {
+                if(state.authLevel === 'admin') { state.dienstplan[slotId] = null; } 
+                else { showToast('Nur Admins können Einträge entfernen.', 'error'); return; }
+            } else {
+                const name = prompt('Bitte gib deinen Namen für die Schicht ein:');
+                if (name) state.dienstplan[slotId] = name.trim();
+            }
+            ls.set('dienstplan', state.dienstplan);
+            renderMemberContent('dienstplan');
+        }
+        if (target.id === 'toggle-tipp-lock') {
+            state.koenigstipp.locked = !state.koenigstipp.locked;
+            ls.set('koenigstipp', state.koenigstipp);
+            renderMemberContent('koenigstipp');
+            showToast(state.koenigstipp.locked ? 'Tippspiel gesperrt.' : 'Tippspiel entsperrt.');
+        }
+        if (target.id === 'declare-winner-btn') {
+            const winner = prompt('Wer ist der Gewinner des Tippspiels?');
+            if(winner) {
+                state.koenigstipp.winner = winner;
+                state.koenigstipp.locked = true;
+                ls.set('koenigstipp', state.koenigstipp);
+                renderMemberContent('koenigstipp');
+                showToast(`Gewinner ${winner} wurde ausgerufen!`);
+            }
+        }
+    }
+
+    // --- TOAST NOTIFICATION ---
+
+    function showToast(message, type = 'success') {
+        const toast = document.getElementById('toast-notification');
+        const toastMessage = document.getElementById('toast-message');
+        toastMessage.textContent = message;
+        toast.classList.remove('hidden', 'bg-green-500', 'bg-red-500');
+        toast.classList.add(type === 'success' ? 'bg-green-500' : 'bg-red-400');
+        setTimeout(() => { toast.classList.add('hidden'); }, 3000);
+    }
+
+    </script>
+</body>
+</html>
+
