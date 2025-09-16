@@ -156,6 +156,8 @@
         let detachListeners = () => {};
         const state = { authLevel: 'public', content: {}, events: [], memberData: { koenigstipp: { tips: [] }, dienstplan: {} }, koenigsarchiv: [], gallery: initialData.gallery };
         
+        // --- CORE INITIALIZATION ---
+        
         document.addEventListener('DOMContentLoaded', async () => {
             setLogLevel('error');
             document.getElementById('current-year').textContent = new Date().getFullYear();
@@ -243,6 +245,8 @@
             setTimeout(() => loadingOverlay.classList.add('hidden'), 500);
         }
         
+        // --- RENDER FUNCTIONS ---
+        
         function renderContent() { renderEditableContent(); renderCurrentTabs(); }
         function renderDynamicContent() { renderTimeline(); renderNextEventHome(); }
         
@@ -307,26 +311,263 @@
                     renderMemberContent(btn.dataset.memberTab);
                 }
             });
+            document.getElementById('admin-event-form-container').addEventListener('submit', handleEventFormSubmit);
+            document.getElementById('admin-event-form-container').addEventListener('click', (e) => { if (e.target.id === 'cancel-edit-btn') resetEventForm(); });
             document.getElementById('member-content').addEventListener('submit', handleMemberAreaSubmits);
             document.getElementById('member-content').addEventListener('click', handleMemberAreaClicks);
         }
-        function renderVereinContent(tab) { /* ... same as before ... */ }
-        function renderBrauchtumContent(tab) { /* ... same as before ... */ }
-        function renderKoenigsarchiv() { /* ... same as before ... */ }
-        function renderMemberContent(tab) { /* ... same as before ... */ }
-        function navigateTo(pageId) { /* ... same as before ... */ }
-        function handleLogin() { /* ... same as before ... */ }
-        function handleLogout() { /* ... same as before ... */ }
-        function updateUIforAuthState() { /* ... same as before ... */ }
-        async function saveContentChanges() { /* ... same as before ... */ }
-        function renderAdminEventForm() { /* ... same as before ... */ }
-        async function handleEventFormSubmit(e) { /* ... same as before ... */ }
-        function resetEventForm() { /* ... same as before ... */ }
-        window.openEventEditor = (eventId) => { /* ... same as before ... */ }
-        window.deleteEvent = async (eventId) => { /* ... same as before ... */ }
-        async function handleMemberAreaSubmits(e) { /* ... same as before ... */ }
-        async function handleMemberAreaClicks(e) { /* ... same as before ... */ }
-        function showToast(message, type = 'success') { /* ... same as before ... */ }
+        function renderEditableContent() {
+            document.querySelectorAll('.jgv-editable').forEach(el => {
+                const id = el.id || el.dataset.id;
+                if (id && state.content[id]) el.innerHTML = state.content[id];
+            });
+        }
+        function renderTimeline() {
+            const container = document.getElementById('timeline-container');
+            if (!container) return;
+            const now = new Date(); now.setHours(0,0,0,0);
+            const visibleEvents = state.events.filter(e => state.authLevel !== 'public' || e.type === 'public');
+            const sortedEvents = [
+                ...visibleEvents.filter(e => new Date(e.date) >= now).sort((a,b) => new Date(a.date) - new Date(b.date)),
+                ...visibleEvents.filter(e => new Date(e.date) < now).sort((a,b) => new Date(b.date) - new Date(a.date))
+            ];
+            container.innerHTML = sortedEvents.length === 0 ? `<p class="text-center text-gray-500">Keine Termine verfügbar.</p>` : sortedEvents.map((event, index) => {
+                const eventDate = new Date(event.date);
+                const isPast = eventDate < now;
+                const side = index % 2 === 0 ? 'left' : 'right';
+                const internalBadge = event.type === 'internal' ? '<span class="absolute top-2 right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full z-10">INTERN</span>' : '';
+                const adminControls = state.authLevel === 'admin' ? `<div class="absolute top-2 left-2 flex gap-2"><button onclick="openEventEditor('${event.id}')" class="text-sm bg-blue-500 hover:bg-blue-600 text-white w-7 h-7 rounded-full flex items-center justify-center" title="Bearbeiten"><i class="fas fa-pencil-alt"></i></button><button onclick="deleteEvent('${event.id}')" class="text-sm bg-red-500 hover:bg-red-600 text-white w-7 h-7 rounded-full flex items-center justify-center" title="Löschen"><i class="fas fa-trash-alt"></i></button></div>` : '';
+                const detailsButton = event.details ? `<button data-toggle-details="${event.id}" class="mt-3 text-sm text-blue-500 hover:underline">Mehr Details <i class="fas fa-chevron-down text-xs"></i></button>` : '';
+                return `<div class="timeline-container ${side}"><div class="timeline-content bg-white dark:bg-gray-800 shadow-lg ${isPast ? 'opacity-60' : ''}">${internalBadge}${adminControls}<h2 class="text-xl font-bold text-blue-500 mt-8 sm:mt-0">${event.title}</h2><p class="text-sm text-gray-500 dark:text-gray-400 mb-2">${eventDate.toLocaleDateString('de-DE', { day: '2-digit', month: 'long', year: 'numeric' })}</p><p>${event.description}</p>${detailsButton}<div id="details-${event.id}" class="details-content text-left text-gray-600 dark:text-gray-400 mt-3 pt-3 border-t dark:border-gray-700">${event.details || ''}</div></div></div>`;
+            }).join('');
+            setTimeout(() => { const observer = new IntersectionObserver(es => es.forEach(e => { if(e.isIntersecting) { e.target.classList.add('is-visible'); observer.unobserve(e.target); } }), {threshold:0.1}); document.querySelectorAll('.timeline-container').forEach(i => observer.observe(i)); }, 100);
+        }
+        function renderNextEventHome() {
+            const container = document.getElementById('next-event-container-home');
+            if (!container) return;
+            const now = new Date();
+            const upcomingEvent = [...state.events].filter(e => e.type === 'public' && new Date(e.date) >= now).sort((a, b) => new Date(a.date) - new Date(b.date))[0];
+            if (upcomingEvent) {
+                const eventDate = new Date(upcomingEvent.date);
+                const detailsButton = upcomingEvent.details ? `<button data-toggle-details="home-${upcomingEvent.id}" class="mt-4 text-sm bg-white/30 hover:bg-white/50 text-white font-semibold py-2 px-4 rounded-full">Mehr erfahren <i class="fas fa-chevron-down text-xs"></i></button>` : '';
+                container.innerHTML = `<p class="text-3xl font-bold">${upcomingEvent.title}</p><p class="text-xl mt-1">${eventDate.toLocaleDateString('de-DE', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })}</p><p class="mt-4 text-gray-200 max-w-2xl mx-auto">${upcomingEvent.description}</p><div class="mt-4">${detailsButton}</div><div id="details-home-${upcomingEvent.id}" class="details-content text-left text-gray-200 mt-3 pt-3 border-t border-white/30">${upcomingEvent.details || ''}</div>`;
+            } else { container.innerHTML = `<p>Zurzeit sind keine öffentlichen Termine geplant.</p>`; }
+        }
+        function renderGallery() {
+            const grid = document.getElementById('gallery-grid');
+            if(!grid) return;
+            grid.innerHTML = state.gallery.map(img => `<div class="aspect-w-4 aspect-h-3"><img src="${img.thumb}" data-full="${img.full}" alt="Galeriebild ${img.id}" class="w-full h-full object-cover rounded-lg shadow-md cursor-pointer hover:scale-105 transition-transform"></div>`).join('');
+        }
+        function renderCurrentTabs() {
+            const vereinTab = document.querySelector('#verein .verein-tab-btn.bg-blue-500')?.dataset.vereinTab;
+            if(vereinTab) renderVereinContent(vereinTab);
+            const brauchtumTab = document.querySelector('#brauchtum .brauchtum-tab-btn.bg-blue-500')?.dataset.brauchtumTab;
+            if(brauchtumTab) renderBrauchtumContent(brauchtumTab);
+            const memberTab = document.querySelector('#member-area .member-tab-btn.bg-blue-500')?.dataset.memberTab;
+            if(memberTab) renderMemberContent(memberTab);
+        }
+        function renderVereinContent(tab) {
+            const container = document.getElementById('verein-content');
+            if (!container) return;
+            const baseLayout = (textId) => `<div class="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-lg max-w-4xl mx-auto text-center"><div class="jgv-editable" data-id="${textId}"></div></div>`;
+            let content = '';
+            switch (tab) {
+                case 'vorstand': content = baseLayout('vorstand-text'); break;
+                case 'amtstraeger': content = baseLayout('amtstraeger-text'); break;
+                case 'festausschuss': content = baseLayout('festausschuss-text'); break;
+                case 'martinsausschuss': content = baseLayout('martinsausschuss-text'); break;
+            }
+            container.innerHTML = content;
+            renderEditableContent();
+        }
+        function renderBrauchtumContent(tab) {
+            const container = document.getElementById('brauchtum-content');
+            if (!container) return;
+            let content = '';
+            const baseLayout = (textId) => `<div class="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-lg max-w-4xl mx-auto"><h3 class="text-3xl font-bold mb-4 text-center">${document.querySelector(`[data-brauchtum-tab="${tab}"]`).textContent}</h3><p class="jgv-editable text-lg text-gray-600 dark:text-gray-400" data-id="${textId}"></p></div>`;
+            switch (tab) {
+                case 'geschichte': content = baseLayout('geschichte-text'); break;
+                case 'chronik': content = `<div class="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-lg max-w-4xl mx-auto"><h3 class="text-3xl font-bold mb-6 text-center">Chronik der Könige</h3><div id="koenigsarchiv-container" class="overflow-x-auto"></div></div>`; break;
+                default: content = baseLayout(`${tab}-text`); break;
+            }
+            container.innerHTML = content;
+            if (tab === 'chronik') renderKoenigsarchiv();
+            renderEditableContent();
+        }
+        function renderKoenigsarchiv() {
+            const container = document.getElementById('koenigsarchiv-container');
+            if(!container) return;
+            container.innerHTML = `<table class="w-full text-left border-collapse"><thead><tr class="bg-gray-100 dark:bg-gray-700"><th class="p-3 font-bold uppercase text-sm text-gray-600 dark:text-gray-300 border dark:border-gray-600">Jahr</th><th class="p-3 font-bold uppercase text-sm text-gray-600 dark:text-gray-300 border dark:border-gray-600">König</th></tr></thead><tbody>
+            ${state.koenigsarchiv.sort((a,b) => b.year - a.year).map(king => `<tr class="hover:bg-gray-50 dark:hover:bg-gray-800"><td class="p-3 border dark:border-gray-600">${king.year}</td><td class="p-3 border dark:border-gray-600">${king.name}</td></tr>`).join('')}</tbody></table>`;
+        }
+        function renderMemberContent(tab) {
+            const container = document.getElementById('member-content');
+            if (!container) return;
+            let content = '';
+            const { koenigstipp, dienstplan } = state.memberData;
+            switch (tab) {
+                case 'koenigstipp':
+                    const { locked, winner, tips } = koenigstipp;
+                    const adminControls = state.authLevel === 'admin' ? `<div class="flex justify-center space-x-4 mb-6"><button id="toggle-tipp-lock" class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded">${locked ? 'Spiel entsperren' : 'Spiel sperren'}</button><button id="declare-winner-btn" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded">Gewinner ausrufen</button></div>` : '';
+                    const statusMessage = winner ? `<div class="bg-green-100 dark:bg-green-900 border-l-4 border-green-500 text-green-700 dark:text-green-200 p-4 mb-6 rounded-r-lg"><p class="font-bold">Der Gewinner ist ${winner}!</p></div>` : (locked ? `<div class="bg-yellow-100 dark:bg-yellow-900 border-l-4 border-yellow-500 text-yellow-700 dark:text-yellow-200 p-4 mb-6 rounded-r-lg"><p>Das Tippspiel ist geschlossen.</p></div>` : '');
+                    content = `<div class="max-w-4xl mx-auto bg-white dark:bg-gray-900 p-8 rounded-lg shadow-lg"><h3 class="text-3xl font-bold mb-4 text-center">Königstipp-Spiel</h3>${adminControls}${statusMessage}${!locked && !winner ? `<form id="koenigstipp-form" class="mb-8 flex flex-col sm:flex-row gap-4"><input type="text" id="tipp-user" required placeholder="Dein Name" class="flex-grow px-4 py-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700"><input type="text" id="tipp-guess" required placeholder="Name des Tipps" class="flex-grow px-4 py-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700"><button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg">Tipp abgeben</button></form>` : ''}<h4 class="text-2xl font-bold mb-4">Abgegebene Tipps:</h4><ul id="tipp-list" class="space-y-2">${(tips || []).map(t => `<li class="p-3 bg-gray-100 dark:bg-gray-800 rounded-lg flex justify-between"><strong>${t.user}:</strong> <span>${t.tip}</span></li>`).join('')}</ul></div>`;
+                    break;
+                case 'dienstplan':
+                    const generateDienstplanCell = (slotId) => { const name = dienstplan[slotId]; const content = name ? `<span class="font-semibold">${name}</span>` : `<button class="w-full text-center text-green-600 hover:text-green-800">Eintragen</button>`; return `<td data-slot-id="${slotId}" class="p-3 border dark:border-gray-600 text-center cursor-pointer dienstplan-slot">${content}</td>`; };
+                    const generateDienstplanRow = (dayLabel, dayId) => `<tr class="hover:bg-gray-50 dark:hover:bg-gray-800"><td class="p-3 font-bold border dark:border-gray-600">${dayLabel}</td>${generateDienstplanCell(`${dayId}-theke-1`)}${generateDienstplanCell(`${dayId}-theke-2`)}${generateDienstplanCell(`${dayId}-grill-1`)}</tr>`;
+                    content = `<div class="max-w-5xl mx-auto bg-white dark:bg-gray-900 p-8 rounded-lg shadow-lg"><h3 class="text-3xl font-bold mb-6 text-center">Digitaler Dienstplan (Kirmes)</h3><div class="overflow-x-auto"><table class="w-full text-left border-collapse"><thead><tr class="bg-gray-100 dark:bg-gray-700"><th class="p-3 font-bold uppercase text-sm text-gray-600 dark:text-gray-300 border dark:border-gray-600">Schicht</th><th class="p-3 font-bold uppercase text-sm text-gray-600 dark:text-gray-300 border dark:border-gray-600">Theke 1</th><th class="p-3 font-bold uppercase text-sm text-gray-600 dark:text-gray-300 border dark:border-gray-600">Theke 2</th><th class="p-3 font-bold uppercase text-sm text-gray-600 dark:text-gray-300 border dark:border-gray-600">Grill</th></tr></thead><tbody>${generateDienstplanRow('Freitag', 'freitag')}${generateDienstplanRow('Samstag', 'samstag')}${generateDienstplanRow('Sonntag', 'sonntag')}</tbody></table></div></div>`;
+                    break;
+                case 'dokumente':
+                    content = `<div class="max-w-4xl mx-auto bg-white dark:bg-gray-900 p-8 rounded-lg shadow-lg text-center"><h3 class="text-3xl font-bold mb-4">Dokumentenarchiv</h3><i class="fas fa-hard-hat text-6xl text-yellow-500 my-6"></i><p class="text-xl text-gray-600 dark:text-gray-400">Dieser Bereich ist noch im Aufbau.</p></div>`;
+                    break;
+            }
+            container.innerHTML = content;
+        }
+        function navigateTo(pageId) {
+            document.querySelectorAll('.page-section').forEach(s => s.classList.add('hidden'));
+            let targetSection = document.getElementById(pageId);
+            if (!targetSection) {
+                if(document.querySelector(`[data-verein-tab="${pageId}"]`)) targetSection = document.getElementById('verein');
+                else if(document.querySelector(`[data-brauchtum-tab="${pageId}"]`)) targetSection = document.getElementById('brauchtum');
+                else if(document.querySelector(`[data-member-tab="${pageId}"]`)) targetSection = document.getElementById('member-area');
+                else targetSection = document.getElementById('home');
+            }
+            if (targetSection) targetSection.classList.remove('hidden');
+            if (targetSection && targetSection.id === 'home') document.getElementById('home-intro').classList.remove('hidden');
+
+            if (state.authLevel !== 'public' && (pageId ==='koenigstipp' || pageId === 'dienstplan' || pageId === 'dokumente')) {
+                 document.getElementById('member-area').classList.remove('hidden');
+            } else if (state.authLevel === 'public') {
+                document.getElementById('member-area').classList.add('hidden');
+            }
+            window.history.pushState(null, '', `#${pageId}`);
+            window.scrollTo(0,0);
+        }
+        function handleLogin() {
+            const password = document.getElementById('password-input').value;
+            if (password === 'admin123') state.authLevel = 'admin';
+            else if (password === 'member123') state.authLevel = 'member';
+            else { document.getElementById('login-error').classList.remove('hidden'); return; }
+            showToast('Login erfolgreich!');
+            document.getElementById('login-modal').classList.add('hidden');
+            document.getElementById('password-input').value = '';
+            document.getElementById('login-error').classList.add('hidden');
+            updateUIforAuthState();
+        }
+        function handleLogout() {
+            state.authLevel = 'public';
+            updateUIforAuthState();
+            showToast('Erfolgreich ausgeloggt.');
+            navigateTo('home');
+        }
+        function updateUIforAuthState() {
+            document.getElementById('login-btn').classList.toggle('hidden', state.authLevel !== 'public');
+            document.getElementById('logout-btn').classList.toggle('hidden', state.authLevel === 'public');
+            document.body.classList.toggle('jgv-editing', state.authLevel === 'admin');
+            document.body.classList.toggle('pt-12', state.authLevel === 'admin');
+            document.getElementById('admin-bar').classList.toggle('hidden', state.authLevel !== 'admin');
+            document.querySelectorAll('.jgv-editable').forEach(el => el.setAttribute('contenteditable', state.authLevel === 'admin'));
+            if(state.authLevel === 'admin') renderAdminEventForm(); else document.getElementById('admin-event-form-container').innerHTML = '';
+            renderTimeline();
+            renderCurrentTabs();
+        }
+        async function saveContentChanges() {
+            const newContent = { ...state.content };
+            document.querySelectorAll('.jgv-editable').forEach(el => { const id = el.id || el.dataset.id; if (id) newContent[id] = el.innerHTML; });
+            await updateDoc(doc(db, "jgv-website-data", appId), { content: newContent });
+            showToast('Änderungen gespeichert!');
+        }
+        function renderAdminEventForm() {
+            const container = document.getElementById('admin-event-form-container');
+            container.innerHTML = `<form id="event-form" class="max-w-xl mx-auto my-6 bg-gray-100 dark:bg-gray-800 p-6 rounded-lg shadow-md text-left"><h3 id="event-form-title" class="text-xl font-bold mb-4">Neuen Termin hinzufügen</h3><input type="hidden" id="event-id"><div class="grid grid-cols-1 md:grid-cols-2 gap-4"><input type="text" id="event-title" placeholder="Titel" required class="p-2 rounded border dark:bg-gray-700 dark:border-gray-600"><input type="date" id="event-date" required class="p-2 rounded border dark:bg-gray-700 dark:border-gray-600"></div><textarea id="event-desc" placeholder="Kurzbeschreibung" rows="3" class="w-full mt-4 p-2 rounded border dark:bg-gray-700"></textarea><textarea id="event-details" placeholder="Detaillierte Infos (optional)" rows="5" class="w-full mt-4 p-2 rounded border dark:bg-gray-700"></textarea><div class="mt-4 flex items-center justify-between"><label class="flex items-center select-none"><input type="checkbox" id="event-internal" class="mr-2 h-4 w-4"> Intern</label><div class="flex gap-2"><button type="button" id="cancel-edit-btn" class="hidden bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded">Abbrechen</button><button type="submit" id="event-submit-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">Hinzufügen</button></div></div></form>`;
+        }
+        async function handleEventFormSubmit(e) {
+            e.preventDefault();
+            const eventId = document.getElementById('event-id').value;
+            const eventData = { title: document.getElementById('event-title').value, date: document.getElementById('event-date').value, description: document.getElementById('event-desc').value, details: document.getElementById('event-details').value, type: document.getElementById('event-internal').checked ? 'internal' : 'public' };
+            if (eventId) {
+                await updateDoc(doc(db, `jgv-website-data/${appId}/events`, eventId), eventData);
+                showToast('Termin aktualisiert!');
+            } else {
+                await addDoc(collection(db, `jgv-website-data/${appId}/events`), eventData);
+                showToast('Termin hinzugefügt!');
+            }
+            resetEventForm();
+        }
+        function resetEventForm() {
+            const form = document.getElementById('event-form');
+            if (form) {
+                form.reset();
+                document.getElementById('event-id').value = '';
+                document.getElementById('event-form-title').textContent = 'Neuen Termin hinzufügen';
+                document.getElementById('event-submit-btn').textContent = 'Hinzufügen';
+                document.getElementById('cancel-edit-btn').classList.add('hidden');
+            }
+        }
+        window.openEventEditor = (eventId) => {
+            const event = state.events.find(e => e.id === eventId);
+            if (!event) return;
+            const form = document.getElementById('event-form');
+            if (!form) renderAdminEventForm();
+            document.getElementById('event-form-title').textContent = 'Termin bearbeiten';
+            document.getElementById('event-id').value = event.id;
+            document.getElementById('event-title').value = event.title;
+            document.getElementById('event-date').value = event.date;
+            document.getElementById('event-desc').value = event.description;
+            document.getElementById('event-details').value = event.details || '';
+            document.getElementById('event-internal').checked = event.type === 'internal';
+            document.getElementById('event-submit-btn').textContent = 'Aktualisieren';
+            document.getElementById('cancel-edit-btn').classList.remove('hidden');
+            form.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        };
+        window.deleteEvent = async (eventId) => {
+            if (confirm('Soll dieser Termin wirklich gelöscht werden?')) {
+                 await deleteDoc(doc(db, `jgv-website-data/${appId}/events`, eventId));
+                 showToast('Termin gelöscht.');
+            }
+        };
+        async function handleMemberAreaSubmits(e) {
+            e.preventDefault();
+            const dataDocRef = doc(db, "jgv-website-data", appId);
+            if (e.target.id === 'koenigstipp-form') {
+                const user = document.getElementById('tipp-user').value.trim();
+                const tip = document.getElementById('tipp-guess').value.trim();
+                if (user && tip) {
+                    const newTips = [...(state.memberData.koenigstipp.tips || []), { user, tip }];
+                    await updateDoc(dataDocRef, { 'memberData.koenigstipp.tips': newTips });
+                    showToast('Tipp abgegeben!');
+                    e.target.reset();
+                }
+            }
+        }
+        async function handleMemberAreaClicks(e) {
+            const dataDocRef = doc(db, "jgv-website-data", appId);
+            if (e.target.closest('.dienstplan-slot')) {
+                const slotId = e.target.closest('.dienstplan-slot').dataset.slotId;
+                if (state.memberData.dienstplan[slotId]) {
+                    if (state.authLevel === 'admin') {
+                        await updateDoc(dataDocRef, { [`memberData.dienstplan.${slotId}`]: null });
+                    } else { showToast('Nur Admins können Einträge entfernen.', 'error'); }
+                } else {
+                    const name = prompt('Dein Name für die Schicht:');
+                    if (name) await updateDoc(dataDocRef, { [`memberData.dienstplan.${slotId}`]: name.trim() });
+                }
+            }
+            if (e.target.id === 'toggle-tipp-lock') {
+                await updateDoc(dataDocRef, { 'memberData.koenigstipp.locked': !state.memberData.koenigstipp.locked });
+            }
+            if (e.target.id === 'declare-winner-btn') {
+                const winner = prompt('Wer ist der Gewinner?');
+                if (winner) await updateDoc(dataDocRef, { 'memberData.koenigstipp.winner': winner, 'memberData.koenigstipp.locked': true });
+            }
+        }
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast-notification');
+            toast.textContent = message;
+            toast.className = `fixed bottom-5 right-5 text-white py-2 px-5 rounded-lg shadow-lg ${type === 'success' ? 'bg-green-500' : 'bg-red-500'}`;
+            toast.classList.remove('hidden');
+            setTimeout(() => toast.classList.add('hidden'), 3000);
+        }
     </script>
 </body>
 </html>
