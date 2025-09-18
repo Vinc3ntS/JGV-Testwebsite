@@ -142,8 +142,8 @@
                 'datenschutz-text': `<h3>1. Datenschutz auf einen Blick</h3><p><strong>Allgemeine Hinweise</strong></p><p>Die folgenden Hinweise geben einen einfachen Überblick darüber, was mit Ihren personenbezogenen Daten passiert, wenn Sie diese Website besuchen. Personenbezogene Daten sind alle Daten, mit denen Sie persönlich identifiziert werden können.</p><h3>2. Datenerfassung auf dieser Website</h3><p><strong>Wer ist verantwortlich für die Datenerfassung auf dieser Website?</strong></p><p>Die Datenverarbeitung auf dieser Website erfolgt durch den Websitebetreiber. Dessen Kontaktdaten können Sie dem Impressum dieser Website entnehmen.</p><p><em>(Dies ist ein Mustertext. Bitte lassen Sie ihn von einem Fachanwalt prüfen.)</em></p>`,
                 'vermietung-li-1': '<i class="fas fa-check-circle text-green-500 mr-2"></i>Großer Festsaal', 'vermietung-li-2': '<i class="fas fa-check-circle text-green-500 mr-2"></i>Voll ausgestattete Theke', 'vermietung-li-3': '<i class="fas fa-check-circle text-green-500 mr-2"></i>Moderne Küche', 'vermietung-li-4': '<i class="fas fa-check-circle text-green-500 mr-2"></i>Außenbereich mit Sitzgelegenheiten',
                 'stat-year': '1888', 'stat-members': '150', 'stat-feste': '5',
-                'google-calendar-embed': `<iframe src="https://calendar.google.com/calendar/embed?height=600&wkst=2&bgcolor=%23111827&ctz=Europe%2FBerlin&title=JGV%20Kripp%20Vermietung&showTz=0&showCalendars=0&showPrint=0&src=cGxhY2Vob2xkZXI&color=%23ffffff" style="border-width:0" class="w-full h-full" frameborder="0" scrolling="no"></iframe>`,
-                'google-calendar-termine-embed': `<iframe src="https://calendar.google.com/calendar/embed?height=600&wkst=2&bgcolor=%23111827&ctz=Europe%2FBerlin&title=JGV%20Kripp%20Termine&src=cGxhY2Vob2xkZXI&color=%23ffffff" style="border:solid 1px #4b5563" class="w-full h-full" frameborder="0" scrolling="no"></iframe>`,
+                'google-calendar-embed': `<iframe src="https://calendar.google.com/calendar/embed?height=600&wkst=2&bgcolor=%23111827&ctz=Europe%2FBerlin&title=JGV%20Kripp%20Vermietung&showTz=0&showCalendars=0&showPrint=0&src=cGxhY2Vob2xkZXI&color=%23ffffff" class="w-full h-full" style="border-width:0" frameborder="0" scrolling="no"></iframe>`,
+                'google-calendar-termine-embed': `<iframe src="https://calendar.google.com/calendar/embed?height=600&wkst=2&bgcolor=%23111827&ctz=Europe%2FBerlin&title=JGV%20Kripp%20Termine&src=cGxhY2Vob2xkZXI&color=%23ffffff" class="w-full h-full" style="border:solid 1px #4b5563" frameborder="0" scrolling="no"></iframe>`,
                 'vorstand-text': `<p class="text-lg text-gray-400 mb-6">Der Vorstand (8 Personen) leitet die Geschicke des Vereins, vertritt ihn nach außen und trifft strategische Entscheidungen. Er ist das Herz der Vereinsorganisation.</p><ul class="space-y-3 text-left max-w-md mx-auto"><li class="flex justify-between items-center"><span class="font-bold">1. Vorsitzender:</span> <span>Max Mustermann</span></li><li class="flex justify-between items-center"><span class="font-bold">2. Vorsitzender:</span> <span>Peter Müller</span></li><li class="flex justify-between items-center"><span class="font-bold">1. Kassierer:</span> <span>Jens Schmidt</span></li><li class="flex justify-between items-center"><span class="font-bold">2. Kassierer:</span> <span>Tom Becker</span></li><li class="flex justify-between items-center"><span class="font-bold">1. Schriftführer:</span> <span>Klaus Weber</span></li><li class="flex justify-between items-center"><span class="font-bold">2. Schriftführer:</span> <span>Lukas Klein</span></li><li class="flex justify-between items-center"><span class="font-bold">1. Beisitzer:</span> <span>Nico Berg</span></li><li class="flex justify-between items-center"><span class="font-bold">2. Beisitzer:</span> <span>Tim Wolf</span></li></ul>`,
                 'festausschuss-text': `<p class="text-lg text-gray-400 mb-6">Der Festausschuss (16 Personen) ist das kreative Herz des Vereins. Er plant und organisiert unvergessliche Veranstaltungen wie die Kirmes und das Sommerfest, kümmert sich um Dekoration, Musik und das leibliche Wohl.</p>`,
                 'martinsausschuss-text': `<p class="text-lg text-gray-400 mb-6">Dieser Ausschuss (6 Personen) kümmert sich speziell um die Organisation des traditionellen St. Martinszugs in Kripp, vom Martinsfeuer bis zur Ausgabe der Weckmänner an die Kinder.</p>`,
@@ -396,16 +396,16 @@
             const container = document.getElementById('verein-content'); if (!container) return; const baseLayout = (textId) => `<div class="bg-gray-800 p-8 rounded-lg shadow-lg max-w-4xl mx-auto text-center"><div class="jgv-editable" data-id="${textId}"></div></div>`; let content = '';
             switch (tab) { case 'vorstand': content = baseLayout('vorstand-text'); break; case 'amtstraeger': content = baseLayout('amtstraeger-text'); break; case 'festausschuss': content = baseLayout('festausschuss-text'); break; case 'martinsausschuss': content = baseLayout('martinsausschuss-text'); break; }
             container.innerHTML = content;
-            setEditableState();
             renderEditableContent();
+            setEditableState();
         }
         function renderBrauchtumContent(tab) {
             const container = document.getElementById('brauchtum-content'); if (!container) return; let content = '';
             const baseLayout = (textId) => `<div class="bg-gray-800 p-8 rounded-lg shadow-lg max-w-4xl mx-auto"><h3 class="text-3xl font-bold mb-4 text-center">${document.querySelector(`[data-brauchtum-tab="${tab}"]`).textContent}</h3><div class="jgv-editable text-lg text-gray-400" data-id="${textId}"></div></div>`;
             switch (tab) { case 'geschichte': content = baseLayout('geschichte-text'); break; case 'chronik': content = `<div class="bg-gray-800 p-8 rounded-lg shadow-lg max-w-4xl mx-auto"><h3 class="text-3xl font-bold mb-6 text-center">Chronik der Könige</h3><div id="koenigsarchiv-container" class="overflow-x-auto"></div></div>`; break; default: content = baseLayout(`${tab}-text`); break; }
             container.innerHTML = content; if (tab === 'chronik') renderKoenigsarchiv();
-            setEditableState();
             renderEditableContent();
+            setEditableState();
         }
         function renderKoenigsarchiv() {
             const container = document.getElementById('koenigsarchiv-container'); if(!container) return; container.innerHTML = `<table class="w-full text-left border-collapse"><thead><tr class="bg-gray-700"><th class="p-3 font-bold uppercase text-sm text-gray-300 border border-gray-600">Jahr</th><th class="p-3 font-bold uppercase text-sm text-gray-300 border border-gray-600">König</th></tr></thead><tbody> ${state.koenigsarchiv.sort((a,b) => b.year - a.year).map(king => `<tr class="hover:bg-gray-800"><td class="p-3 border border-gray-600">${king.year}</td><td class="p-3 border border-gray-600">${king.name}</td></tr>`).join('')}</tbody></table>`;
@@ -517,7 +517,7 @@
             const oldFull = state.gallery[index].full;
             const newThumb = prompt('URL für das kleine Vorschaubild:', oldThumb);
             if (newThumb === null) return;
-            const newFull = prompt('URL für das große Bild (Lightbox):', oldFull);
+            const newFull = prompt('URL für das große Bild (Lightbox):', newFull);
             if (newFull === null) return;
 
             const newGallery = [...state.gallery];
@@ -527,13 +527,26 @@
         }
         window.handleCalendarEdit = async function(elementId) {
             const oldIframe = state.content[elementId] || '';
-            const newIframe = prompt('Bitte fügen Sie hier den neuen Google Kalender Einbettungscode (<iframe>) ein:', oldIframe);
-             if (newIframe && newIframe.trim().startsWith('<iframe')) {
-                const contentUpdate = {};
-                contentUpdate[`content.${elementId}`] = newIframe;
-                await updateDoc(doc(db, "jgv-website-data", appId), contentUpdate);
-                showToast('Kalender aktualisiert!');
-            } else if (newIframe !== null) {
+            const newIframeHTML = prompt('Bitte fügen Sie hier den neuen Google Kalender Einbettungscode (<iframe>) ein:', oldIframe);
+            if (newIframeHTML === null) return;
+            if (newIframeHTML && newIframeHTML.trim().startsWith('<iframe')) {
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = newIframeHTML;
+                const iframe = tempDiv.querySelector('iframe');
+                if (iframe) {
+                    iframe.removeAttribute('width');
+                    iframe.removeAttribute('height');
+                    iframe.style.border = '0';
+                    iframe.className = 'w-full h-full min-h-[600px]'; // Ensure height
+                    const finalIframeHTML = iframe.outerHTML;
+                    const contentUpdate = {};
+                    contentUpdate[`content.${elementId}`] = finalIframeHTML;
+                    await updateDoc(doc(db, "jgv-website-data", appId), contentUpdate);
+                    showToast('Kalender aktualisiert!');
+                } else {
+                     alert("Fehler: Konnte den <iframe>-Tag im eingefügten Code nicht finden.");
+                }
+            } else {
                 alert("Fehler: Der eingefügte Text scheint kein gültiger <iframe> Code zu sein.");
             }
         }
