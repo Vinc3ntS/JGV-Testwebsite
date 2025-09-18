@@ -46,9 +46,11 @@
         .jgv-editing-only { display: none; }
         .jgv-editing .jgv-editing-only { display: block; }
         
-        .aspect-container { position: relative; width: 100%; padding-top: 75%; /* 4:3 Aspect Ratio */ }
-        .aspect-container.aspect-16-9 { padding-top: 56.25%; }
-        .aspect-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+        #google-calendar-termine-embed iframe,
+        #google-calendar-embed iframe {
+            width: 100%;
+            min-height: 600px; /* Default height */
+        }
 
         @media screen and (max-width: 768px) {
             .timeline::after { left: 31px; }
@@ -136,8 +138,8 @@
                 'datenschutz-text': `<h3>1. Datenschutz auf einen Blick</h3><p><strong>Allgemeine Hinweise</strong></p><p>Die folgenden Hinweise geben einen einfachen Überblick darüber, was mit Ihren personenbezogenen Daten passiert, wenn Sie diese Website besuchen. Personenbezogene Daten sind alle Daten, mit denen Sie persönlich identifiziert werden können.</p><h3>2. Datenerfassung auf dieser Website</h3><p><strong>Wer ist verantwortlich für die Datenerfassung auf dieser Website?</strong></p><p>Die Datenverarbeitung auf dieser Website erfolgt durch den Websitebetreiber. Dessen Kontaktdaten können Sie dem Impressum dieser Website entnehmen.</p><p><em>(Dies ist ein Mustertext. Bitte lassen Sie ihn von einem Fachanwalt prüfen.)</em></p>`,
                 'vermietung-li-1': '<i class="fas fa-check-circle text-green-500 mr-2"></i>Großer Festsaal', 'vermietung-li-2': '<i class="fas fa-check-circle text-green-500 mr-2"></i>Voll ausgestattete Theke', 'vermietung-li-3': '<i class="fas fa-check-circle text-green-500 mr-2"></i>Moderne Küche', 'vermietung-li-4': '<i class="fas fa-check-circle text-green-500 mr-2"></i>Außenbereich mit Sitzgelegenheiten',
                 'stat-year': '1888', 'stat-members': '150', 'stat-feste': '5',
-                'google-calendar-embed': `<div class="aspect-container"><iframe src="https://calendar.google.com/calendar/embed?height=600&wkst=2&bgcolor=%23111827&ctz=Europe%2FBerlin&title=JGV%20Kripp%20Vermietung&showTz=0&showCalendars=0&showPrint=0&src=cGxhY2Vob2xkZXI&color=%23ffffff" style="border-width:0" frameborder="0" scrolling="no"></iframe></div>`,
-                'google-calendar-termine-embed': `<div class="aspect-container aspect-16-9"><iframe src="https://calendar.google.com/calendar/embed?height=600&wkst=2&bgcolor=%23111827&ctz=Europe%2FBerlin&title=JGV%20Kripp%20Termine&src=cGxhY2Vob2xkZXI&color=%23ffffff" style="border:solid 1px #4b5563" frameborder="0" scrolling="no"></iframe></div>`,
+                'google-calendar-embed': `<iframe src="https://calendar.google.com/calendar/embed?height=600&wkst=2&bgcolor=%23111827&ctz=Europe%2FBerlin&title=JGV%20Kripp%20Vermietung&showTz=0&showCalendars=0&showPrint=0&src=cGxhY2Vob2xkZXI&color=%23ffffff" style="border-width:0" width="800" height="600" frameborder="0" scrolling="no"></iframe>`,
+                'google-calendar-termine-embed': `<iframe src="https://calendar.google.com/calendar/embed?height=600&wkst=2&bgcolor=%23111827&ctz=Europe%2FBerlin&title=JGV%20Kripp%20Termine&src=cGxhY2Vob2xkZXI&color=%23ffffff" style="border:solid 1px #4b5563" width="800" height="600" frameborder="0" scrolling="no"></iframe>`,
                 'vorstand-text': `<p class="text-lg text-gray-400 mb-6">Der Vorstand (8 Personen) leitet die Geschicke des Vereins, vertritt ihn nach außen und trifft strategische Entscheidungen. Er ist das Herz der Vereinsorganisation.</p><ul class="space-y-3 text-left max-w-md mx-auto"><li class="flex justify-between items-center"><span class="font-bold">1. Vorsitzender:</span> <span>Max Mustermann</span></li><li class="flex justify-between items-center"><span class="font-bold">2. Vorsitzender:</span> <span>Peter Müller</span></li><li class="flex justify-between items-center"><span class="font-bold">1. Kassierer:</span> <span>Jens Schmidt</span></li><li class="flex justify-between items-center"><span class="font-bold">2. Kassierer:</span> <span>Tom Becker</span></li><li class="flex justify-between items-center"><span class="font-bold">1. Schriftführer:</span> <span>Klaus Weber</span></li><li class="flex justify-between items-center"><span class="font-bold">2. Schriftführer:</span> <span>Lukas Klein</span></li><li class="flex justify-between items-center"><span class="font-bold">1. Beisitzer:</span> <span>Nico Berg</span></li><li class="flex justify-between items-center"><span class="font-bold">2. Beisitzer:</span> <span>Tim Wolf</span></li></ul>`,
                 'festausschuss-text': `<p class="text-lg text-gray-400 mb-6">Der Festausschuss (16 Personen) ist das kreative Herz des Vereins. Er plant und organisiert unvergessliche Veranstaltungen wie die Kirmes und das Sommerfest, kümmert sich um Dekoration, Musik und das leibliche Wohl.</p>`,
                 'martinsausschuss-text': `<p class="text-lg text-gray-400 mb-6">Dieser Ausschuss (6 Personen) kümmert sich speziell um die Organisation des traditionellen St. Martinszugs in Kripp, vom Martinsfeuer bis zur Ausgabe der Weckmänner an die Kinder.</p>`,
@@ -451,12 +453,8 @@
             document.getElementById('login-btn').classList.toggle('hidden', state.authLevel !== 'public'); document.getElementById('logout-btn').classList.toggle('hidden', state.authLevel === 'public');
             document.body.classList.toggle('jgv-editing', state.authLevel === 'admin'); document.body.classList.toggle('pt-12', state.authLevel === 'admin');
             document.getElementById('admin-bar').classList.toggle('hidden', state.authLevel !== 'admin');
-            if(state.authLevel === 'admin') {
-                renderAdminEventForm();
-                setEditableState();
-            } else {
-                document.getElementById('admin-event-form-container').innerHTML = '';
-            }
+            setEditableState();
+            if(state.authLevel === 'admin') renderAdminEventForm(); else document.getElementById('admin-event-form-container').innerHTML = '';
         }
         async function saveContentChanges() {
             const newContent = { ...state.content }; document.querySelectorAll('.jgv-editable').forEach(el => { const id = el.id || el.dataset.id; if (id) newContent[id] = el.innerHTML; });
@@ -524,14 +522,32 @@
         }
         window.handleCalendarEdit = async function(elementId) {
             const oldIframe = state.content[elementId] || '';
-            const newIframeHTML = prompt('Bitte fügen Sie hier den neuen Google Kalender Einbettungscode (<iframe>) ein:', oldIframe);
-             if (newIframeHTML && newIframeHTML.trim().startsWith('<iframe')) {
-                 const finalIframeHTML = `<div class="aspect-container aspect-16-9">${newIframeHTML}</div>`;
-                const contentUpdate = {};
-                contentUpdate[`content.${elementId}`] = finalIframeHTML;
-                await updateDoc(doc(db, "jgv-website-data", appId), contentUpdate);
-                showToast('Kalender aktualisiert!');
-            } else if (newIframeHTML !== null) {
+            const newIframeHTML = prompt('Schritt 1: Bitte fügen Sie hier den kompletten Google Kalender Einbettungscode (<iframe>) ein:', oldIframe);
+            if (newIframeHTML === null) return;
+            
+            if (newIframeHTML && newIframeHTML.trim().startsWith('<iframe')) {
+                 const height = prompt('Schritt 2: Welche Höhe in Pixeln soll der Kalender haben? (z.B. 600)', '600');
+                if (height === null) return;
+
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = newIframeHTML;
+                const iframe = tempDiv.querySelector('iframe');
+                
+                if (iframe) {
+                    iframe.setAttribute('width', '100%');
+                    iframe.setAttribute('height', height);
+                    iframe.style.border = 'solid 1px #4b5563';
+                    
+                    const finalIframeHTML = iframe.outerHTML;
+
+                    const contentUpdate = {};
+                    contentUpdate[`content.${elementId}`] = finalIframeHTML;
+                    await updateDoc(doc(db, "jgv-website-data", appId), contentUpdate);
+                    showToast('Kalender aktualisiert!');
+                } else {
+                     alert("Fehler: Konnte den <iframe>-Tag im eingefügten Code nicht finden.");
+                }
+            } else if (newIframeHTML !== '') {
                 alert("Fehler: Der eingefügte Text scheint kein gültiger <iframe> Code zu sein.");
             }
         }
