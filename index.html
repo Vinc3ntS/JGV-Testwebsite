@@ -137,7 +137,7 @@
                 'martinsausschuss-text': `<p class="text-lg text-gray-400 mb-6">Dieser Ausschuss (6 Personen) kümmert sich um die Organisation des St. Martinszugs.</p>`,
                 'amtstraeger-text': `<p class="text-lg text-gray-400 mb-6">Die Amtsträger repräsentieren den Verein bei offiziellen Anlässen.</p><ul class="space-y-3 text-left max-w-md mx-auto"><li><span class="font-bold">König (2025):</span> <span>Christian Laux</span></li></ul>`,
                 'geschichte-text': `Gegründet im Jahre 1888, wurde das Vereinsleben durch den 1. Weltkrieg unterbrochen. Danach erblühte es neu, und das Königsschießen wurde eingeführt.`,
-                'kirmes-brauchtum-text': 'Die Kripper Kirmes ist das größte Fest im Dorf und der Höhepunkt unseres Vereinsjahres.',
+                'brauchtum-kirmes-text': 'Die Kripper Kirmes ist das größte Fest im Dorf und der Höhepunkt unseres Vereinsjahres.',
                 'maiabend-text': 'Der Maiabend leitet traditionell den Wonnemonat ein.',
                 'strohbaertreiben-text': 'Ein besonderer Brauch ist das Strohbärtreiben an Karneval.',
                 'martinstag-text': 'Am Martinstag begleiten wir den Martinszug durch das Dorf.',
@@ -237,17 +237,18 @@
                 state.memberData = data.memberData || {};
                 state.koenigsarchiv = data.koenigsarchiv || [];
                 renderStaticContent();
-            });
+            }, (error) => console.error("Error in data listener:", error));
 
             const unsub2 = onSnapshot(query(eventsColRef), s => { 
                 state.events = s.docs.map(d => ({ id: d.id, ...d.data() })); 
                 renderDynamicContent(); 
-            });
+            }, (error) => console.error("Error in events listener:", error));
+
             const unsub3 = onSnapshot(query(rostersColRef), s => { 
                 state.rosters = s.docs.map(d => ({ id: d.id, ...d.data() })); 
-                if(document.getElementById('admin-dashboard')?.style.display !== 'none') renderDashboardRosters(); 
-                if(document.getElementById('member-area')?.style.display !== 'none') renderMemberContent('dienstplan');
-            });
+                if(!document.getElementById('admin-dashboard').classList.contains('hidden')) renderDashboardRosters(); 
+                if(!document.getElementById('member-area').classList.contains('hidden')) renderMemberContent('dienstplan');
+            }, (error) => console.error("Error in rosters listener:", error));
             
             detachListeners = () => { unsub1(); unsub2(); unsub3(); };
             
@@ -263,9 +264,9 @@
         
         function renderStaticContent() { 
             renderEditableContent(); 
-            renderCurrentTabs(); 
             renderDynamicStyles(); 
             renderGallery(); 
+            renderCurrentTabs();
         }
         function renderDynamicContent() { 
             renderTimeline(); 
@@ -307,7 +308,7 @@
         function navigateTo(pageId) { /* ... */ }
         function handleLogin() { /* ... */ }
         function handleLogout() { /* ... */ }
-        function setEditableState() { /* ... */ }
+        function setEditableState(enable) { /* ... */ }
         function updateUIforAuthState() { /* ... */ }
         async function saveContentChanges() { /* ... */ }
         function handleEventFormSubmit(e) { /* ... */ }
