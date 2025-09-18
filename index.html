@@ -53,6 +53,8 @@
         }
         .edit-overlay-btn:hover { background-color: rgba(0,0,0,0.9); }
         .jgv-editing .edit-overlay-btn { display: flex; }
+        .jgv-editing-only { display: none; }
+        .jgv-editing .jgv-editing-only { display: block; }
 
         @media screen and (max-width: 768px) {
             .timeline::after { left: 31px; }
@@ -273,7 +275,7 @@
             document.getElementById('main-content').innerHTML = `
                 <section id="home" class="page-section min-h-screen flex items-center justify-center text-center bg-cover bg-center bg-fixed relative"><div class="absolute top-0 right-0 p-2 jgv-editing-only"><button onclick="handleBgEdit()" class="bg-black/50 hover:bg-black/70 text-white text-xs py-1 px-2 rounded-full"><i class="fas fa-image mr-1"></i>Hintergrund</button></div><div class="container mx-auto px-6 text-white"><h1 id="home-title" class="jgv-editable text-5xl md:text-7xl font-black mb-4"></h1><p id="home-subtitle" class="jgv-editable text-xl md:text-2xl mb-8"></p><div class="bg-black/30 backdrop-blur-md p-6 rounded-lg max-w-4xl mx-auto"><h2 class="text-2xl font-bold mb-3">Das nächste Highlight</h2><div id="next-event-container-home" class="text-lg"></div></div></div></section>
                 <section id="home-intro" class="page-section py-20 bg-gray-900"><div class="container mx-auto px-6"><div class="text-center mb-12"><h2 class="text-4xl font-bold mb-4">Willkommen beim JGV Kripp</h2><p id="verein-intro-text" class="jgv-editable max-w-3xl mx-auto text-lg text-gray-400"></p></div><div class="mt-12"><div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center"><div><i class="fas fa-calendar-alt text-4xl text-blue-400 mb-4"></i><h3 id="stat-year" class="jgv-editable text-5xl font-bold"></h3><p class="text-gray-400 mt-2">Gründungsjahr</p></div><div><i class="fas fa-users text-4xl text-blue-400 mb-4"></i><h3 id="stat-members" class="jgv-editable text-5xl font-bold"></h3><p class="text-gray-400 mt-2">Mitglieder</p></div><div><i class="fas fa-glass-cheers text-4xl text-blue-400 mb-4"></i><h3 id="stat-feste" class="jgv-editable text-5xl font-bold"></h3><p class="text-gray-400 mt-2">Jährliche Feste</p></div></div></div></div></section>
-                <section id="termine" class="page-section hidden py-20"><div class="container mx-auto px-6"><div class="text-center mb-12"><h2 class="text-4xl font-bold mb-4">Unsere Termine</h2><p class="max-w-3xl mx-auto text-lg text-gray-400">Hier finden Sie eine Übersicht über alle kommenden und vergangenen Veranstaltungen.</p></div><div class="mb-12 bg-gray-800 p-2 sm:p-3 rounded-lg shadow-lg overflow-hidden max-w-4xl mx-auto relative calendar-container"><button onclick="handleCalendarEdit('google-calendar-termine-embed')" class="edit-overlay-btn" title="Kalender bearbeiten"><i class="fas fa-pencil-alt text-xs"></i></button><div id="google-calendar-termine-embed" class="aspect-w-16 aspect-h-9"></div></div><div id="admin-event-form-container"></div><div id="timeline-container" class="timeline"></div></div></section>
+                <section id="termine" class="page-section hidden py-20"><div class="container mx-auto px-6"><div class="text-center mb-12"><h2 class="text-4xl font-bold mb-4">Unsere Termine</h2><p class="max-w-3xl mx-auto text-lg text-gray-400">Hier finden Sie eine Übersicht über alle kommenden und vergangenen Veranstaltungen.</p></div><div class="mb-12 bg-gray-800 p-2 sm:p-3 rounded-lg shadow-lg overflow-hidden max-w-4xl mx-auto relative calendar-container"><button onclick="handleCalendarEdit('google-calendar-termine-embed')" class="edit-overlay-btn" title="Kalender bearbeiten"><i class="fas fa-pencil-alt text-xs"></i></button><div id="google-calendar-termine-embed"></div></div><div id="admin-event-form-container"></div><div id="timeline-container" class="timeline"></div></div></section>
                 <section id="galerie" class="page-section hidden py-20 bg-gray-900"><div class="container mx-auto px-6"><div class="text-center mb-12"><h2 class="text-4xl font-bold mb-4">Fotogalerie</h2><p id="gallery-intro-text" class="jgv-editable max-w-3xl mx-auto text-lg text-gray-400"></p></div><div id="gallery-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"></div></div></section>
                 <section id="verein" class="page-section hidden py-20"><div class="container mx-auto px-6"><div class="text-center mb-12"><h2 class="text-4xl font-bold mb-4">Unser Verein</h2><p class="max-w-3xl mx-auto text-lg text-gray-400">Lernen Sie die Menschen kennen, die den Verein gestalten und führen.</p><div class="flex flex-wrap justify-center gap-2 mt-6"><button data-verein-tab="vorstand" class="verein-tab-btn bg-blue-500 text-white py-2 px-4 rounded-full">Vorstand</button><button data-verein-tab="amtstraeger" class="verein-tab-btn bg-gray-700 py-2 px-4 rounded-full">Amtsträger</button><button data-verein-tab="festausschuss" class="verein-tab-btn bg-gray-700 py-2 px-4 rounded-full">Festausschuss</button><button data-verein-tab="martinsausschuss" class="verein-tab-btn bg-gray-700 py-2 px-4 rounded-full">Martinsausschuss</button></div></div><div id="verein-content" class="mt-8"></div></div></section>
                 <section id="brauchtum" class="page-section hidden py-20 bg-gray-900"><div class="container mx-auto px-6"><div class="text-center mb-12"><h2 class="text-4xl font-bold mb-4">Brauchtum & Tradition</h2><p class="max-w-3xl mx-auto text-lg text-gray-400">Entdecken Sie die reiche Geschichte und die gelebten Traditionen unseres Vereins.</p><div class="flex flex-wrap justify-center gap-2 mt-6"><button data-brauchtum-tab="geschichte" class="brauchtum-tab-btn bg-blue-500 text-white py-2 px-4 rounded-full">Geschichte</button><button data-brauchtum-tab="chronik" class="brauchtum-tab-btn bg-gray-700 py-2 px-4 rounded-full">Chronik der Könige</button><button data-brauchtum-tab="kirmes" class="brauchtum-tab-btn bg-gray-700 py-2 px-4 rounded-full">Kirmes</button><button data-brauchtum-tab="maiabend" class="brauchtum-tab-btn bg-gray-700 py-2 px-4 rounded-full">Maiabend</button><button data-brauchtum-tab="strohbaertreiben" class="brauchtum-tab-btn bg-gray-700 py-2 px-4 rounded-full">Strohbärtreiben</button><button data-brauchtum-tab="martinstag" class="brauchtum-tab-btn bg-gray-700 py-2 px-4 rounded-full">Martinstag</button><button data-brauchtum-tab="faehndelschwenken" class="brauchtum-tab-btn bg-gray-700 py-2 px-4 rounded-full">Fähndelschwenken</button></div></div><div id="brauchtum-content" class="mt-8"></div></div></section>
@@ -319,9 +321,12 @@
                     btn.classList.add('bg-blue-500', 'text-white'); btn.classList.remove('bg-gray-700');
                     renderBrauchtumContent(btn.dataset.brauchtumTab);
                 }
-                if (e.target.closest('.edit-gallery-btn')) {
-                    const index = e.target.closest('.gallery-item').dataset.index;
-                    handleGalleryImageEdit(index);
+                if (e.target.closest('.edit-overlay-btn')) {
+                    const galleryItem = e.target.closest('.gallery-item');
+                    if (galleryItem) {
+                        const index = galleryItem.dataset.index;
+                        handleGalleryImageEdit(index);
+                    }
                 }
             });
              document.querySelector('#member-area').addEventListener('click', (e) => {
@@ -390,13 +395,13 @@
         function renderVereinContent(tab) {
             const container = document.getElementById('verein-content'); if (!container) return; const baseLayout = (textId) => `<div class="bg-gray-800 p-8 rounded-lg shadow-lg max-w-4xl mx-auto text-center"><div class="jgv-editable" data-id="${textId}"></div></div>`; let content = '';
             switch (tab) { case 'vorstand': content = baseLayout('vorstand-text'); break; case 'amtstraeger': content = baseLayout('amtstraeger-text'); break; case 'festausschuss': content = baseLayout('festausschuss-text'); break; case 'martinsausschuss': content = baseLayout('martinsausschuss-text'); break; }
-            container.innerHTML = content; renderEditableContent();
+            container.innerHTML = content; updateUIforAuthState();
         }
         function renderBrauchtumContent(tab) {
             const container = document.getElementById('brauchtum-content'); if (!container) return; let content = '';
             const baseLayout = (textId) => `<div class="bg-gray-800 p-8 rounded-lg shadow-lg max-w-4xl mx-auto"><h3 class="text-3xl font-bold mb-4 text-center">${document.querySelector(`[data-brauchtum-tab="${tab}"]`).textContent}</h3><div class="jgv-editable text-lg text-gray-400" data-id="${textId}"></div></div>`;
             switch (tab) { case 'geschichte': content = baseLayout('geschichte-text'); break; case 'chronik': content = `<div class="bg-gray-800 p-8 rounded-lg shadow-lg max-w-4xl mx-auto"><h3 class="text-3xl font-bold mb-6 text-center">Chronik der Könige</h3><div id="koenigsarchiv-container" class="overflow-x-auto"></div></div>`; break; default: content = baseLayout(`${tab}-text`); break; }
-            container.innerHTML = content; if (tab === 'chronik') renderKoenigsarchiv(); renderEditableContent();
+            container.innerHTML = content; if (tab === 'chronik') renderKoenigsarchiv(); updateUIforAuthState();
         }
         function renderKoenigsarchiv() {
             const container = document.getElementById('koenigsarchiv-container'); if(!container) return; container.innerHTML = `<table class="w-full text-left border-collapse"><thead><tr class="bg-gray-700"><th class="p-3 font-bold uppercase text-sm text-gray-300 border border-gray-600">Jahr</th><th class="p-3 font-bold uppercase text-sm text-gray-300 border border-gray-600">König</th></tr></thead><tbody> ${state.koenigsarchiv.sort((a,b) => b.year - a.year).map(king => `<tr class="hover:bg-gray-800"><td class="p-3 border border-gray-600">${king.year}</td><td class="p-3 border border-gray-600">${king.name}</td></tr>`).join('')}</tbody></table>`;
@@ -505,7 +510,7 @@
             const oldFull = state.gallery[index].full;
             const newThumb = prompt('URL für das kleine Vorschaubild:', oldThumb);
             if (newThumb === null) return;
-            const newFull = prompt('URL für das große Bild (Lightbox):', newFull);
+            const newFull = prompt('URL für das große Bild (Lightbox):', oldFull);
             if (newFull === null) return;
 
             const newGallery = [...state.gallery];
@@ -514,10 +519,12 @@
             showToast('Galeriebild aktualisiert!');
         }
         window.handleCalendarEdit = async function(elementId) {
-            const oldIframe = state.content[elementId];
+            const oldIframe = state.content[elementId] || '';
             const newIframe = prompt('Bitte fügen Sie hier den neuen Google Kalender Einbettungscode (<iframe>) ein:', oldIframe);
-             if (newIframe && newIframe.startsWith('<iframe')) {
-                await updateDoc(doc(db, "jgv-website-data", appId), { [`content.${elementId}`]: newIframe });
+             if (newIframe && newIframe.trim().startsWith('<iframe')) {
+                const contentUpdate = {};
+                contentUpdate[`content.${elementId}`] = newIframe;
+                await updateDoc(doc(db, "jgv-website-data", appId), contentUpdate);
                 showToast('Kalender aktualisiert!');
             } else if (newIframe !== null) {
                 alert("Fehler: Der eingefügte Text scheint kein gültiger <iframe> Code zu sein.");
